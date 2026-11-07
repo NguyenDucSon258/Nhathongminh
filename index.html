@@ -351,9 +351,9 @@
                             🔒 Khóa Cửa Lại Ngay (Servo 0°)
                         </button>
 
-                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.72rem; margin-top:8px; padding-top:6px; border-top:1px dashed rgba(37,99,235,0.2);">
-                            <span>Trường Firebase: <code>DieuKhien/MatKhau</code></span>
-                            <span id="doorPinSyncStatus" style="color:var(--accent-green); font-weight:600;">Đã đồng bộ Firebase</span>
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; margin-top:8px; padding-top:6px; border-top:1px dashed rgba(37,99,235,0.2);">
+                            <span>Mật khẩu trên khóa & LCD: <strong id="ovCurrentLcdPin" style="font-family:monospace; font-size:0.92rem; color:var(--accent-primary); letter-spacing:2px;">1234</strong></span>
+                            <span id="doorPinSyncStatus" style="color:var(--accent-green); font-weight:600; font-size:0.72rem;">● Đã đồng bộ LCD</span>
                         </div>
 
                         <div id="doorPasswordMsg" style="font-size:0.75rem; margin-top:4px; min-height:16px; color:var(--text-muted);">
@@ -799,42 +799,44 @@
         </div>
     </div>
 
-    <!-- Modal Đổi Mật Khẩu Khóa Cửa (Đồng bộ Firebase DieuKhien/MatKhau) -->
+    <!-- Modal Đổi Mật Khẩu Khóa Cửa (Đồng bộ Firebase DieuKhien/MatKhau & LCD) -->
     <div class="modal-overlay" id="changePasswordModalOverlay">
         <div class="modal-card" style="max-width:430px; text-align:left;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                 <div style="display:flex; align-items:center; gap:8px;">
                     <div style="font-size:1.5rem; line-height:1;">🔑</div>
                     <div>
-                        <h3 style="font-size:1.05rem; font-weight:700; margin:0;">Đổi Mật Khẩu Mở Cửa</h3>
+                        <h3 style="font-size:1.05rem; font-weight:700; margin:0;">Đổi Mật Khẩu Khóa Cửa</h3>
                         <div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;">
-                            Đồng bộ trường: <code>DieuKhien/MatKhau</code>
+                            Đồng bộ trường: <code>DieuKhien/MatKhau</code> & Màn hình LCD
                         </div>
                     </div>
                 </div>
                 <span style="font-size:1.4rem; cursor:pointer; color:var(--text-muted); line-height:1;" onclick="AppCore.closeChangePasswordModal()">&times;</span>
             </div>
 
+            <!-- Khối hiển thị mật khẩu hiện tại trên LCD -->
+            <div style="background:rgba(37,99,235,0.06); border:1px solid rgba(37,99,235,0.2); border-radius:10px; padding:0.65rem 0.85rem; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:0.75rem; color:var(--text-secondary); font-weight:600;">Mật khẩu hiện tại trên khóa & LCD:</div>
+                    <div style="font-size:0.7rem; color:var(--text-muted);">Tự động cập nhật khi đổi tại bàn phím nhà</div>
+                </div>
+                <div id="modalCurrentPinDisplay" style="font-family:monospace; font-size:1.15rem; font-weight:800; color:var(--accent-primary); letter-spacing:2px; background:var(--card-bg); padding:2px 10px; border-radius:6px; border:1px solid rgba(37,99,235,0.25);">1234</div>
+            </div>
+
             <form onsubmit="event.preventDefault(); AppCore.submitChangePasswordModal();" style="display:flex; flex-direction:column; gap:12px;">
                 <div>
                     <label style="display:block; font-size:0.78rem; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">
-                        Mã PIN hiện tại:
+                        Nhập mã PIN mới (4 - 8 ký tự):
                     </label>
-                    <input type="password" id="modalOldPin" class="form-input" placeholder="Nhập mã PIN đang dùng" style="width:100%; font-family:monospace; letter-spacing:2px; font-size:0.9rem;" required>
+                    <input type="text" id="modalNewPin" class="form-input" placeholder="Ví dụ: 1234, 5678, 9999..." maxlength="8" style="width:100%; font-family:monospace; letter-spacing:3px; font-size:1rem; text-align:center; font-weight:700;" required autocomplete="off">
                 </div>
 
                 <div>
                     <label style="display:block; font-size:0.78rem; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">
-                        Mã PIN mới (4 - 8 ký tự):
+                        Xác nhận lại mã PIN mới:
                     </label>
-                    <input type="password" id="modalNewPin" class="form-input" placeholder="Nhập mã PIN mới (ví dụ: 1234, 5678,...)" maxlength="8" style="width:100%; font-family:monospace; letter-spacing:2px; font-size:0.9rem;" required>
-                </div>
-
-                <div>
-                    <label style="display:block; font-size:0.78rem; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">
-                        Xác nhận mã PIN mới:
-                    </label>
-                    <input type="password" id="modalConfirmPin" class="form-input" placeholder="Nhập lại mã PIN mới" maxlength="8" style="width:100%; font-family:monospace; letter-spacing:2px; font-size:0.9rem;" required>
+                    <input type="text" id="modalConfirmPin" class="form-input" placeholder="Nhập lại mã PIN mới để xác nhận" maxlength="8" style="width:100%; font-family:monospace; letter-spacing:3px; font-size:1rem; text-align:center; font-weight:700;" required autocomplete="off">
                 </div>
 
                 <div id="modalChangePasswordMsg" style="font-size:0.75rem; min-height:18px; color:var(--text-muted);"></div>
@@ -844,7 +846,7 @@
                         Hủy
                     </button>
                     <button type="submit" id="btnSubmitChangePin" class="btn-action" style="flex:2; justify-content:center; padding:0.6rem; background:var(--accent-primary); color:#ffffff; border-color:var(--accent-primary); font-weight:700;">
-                        💾 Lưu & Đồng Bộ Firebase
+                        💾 Lưu & Đồng Bộ Lên LCD
                     </button>
                 </div>
             </form>

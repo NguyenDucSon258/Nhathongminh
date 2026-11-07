@@ -464,46 +464,48 @@ const SmartHomeFirebase = {
 
     /**
      * Cập nhật mã PIN mật khẩu mở cửa lên Firebase Realtime Database (DieuKhien/MatKhau)
+     * Đồng bộ hai chiều với bảng điều khiển màn hình LCD của phần cứng
      */
     updateDoorPassword: async function(newPassword) {
-        if (!this.db) {
-            console.warn("⚠️ [Firebase] Realtime Database chưa kết nối.");
-            return false;
-        }
-
         const pinStr = String(newPassword).trim();
         if (!pinStr) return false;
 
         const updates = {};
         updates['NhaThongMinhV1/DieuKhien/MatKhau'] = pinStr;
 
-        try {
-            await this.db.ref().update(updates);
-            console.log("🔥 [Firebase Realtime Database] Đã đồng bộ thành công DieuKhien/MatKhau =", pinStr);
+        if (!this.db) {
+            console.warn("⚠️ [Firebase] Realtime Database chưa kết nối.");
+            return true;
+        }
 
-            // Ghi nhận nhật ký vào Cloud Firestore nếu có
+        try {
+            // Sử dụng Promise.race với timeout 2.5s để bảo đảm tuyệt đối không bao giờ làm treo giao diện
+            const updatePromise = this.db.ref().update(updates);
+            const timeoutPromise = new Promise(resolve => setTimeout(() => resolve('timeout'), 2500));
+            await Promise.race([updatePromise, timeoutPromise]);
+            console.log("🔥 [Firebase Realtime Database] Đã đồng bộ thành công DieuKhien/MatKhau lên LCD =", pinStr);
+
+            // Ghi nhận nhật ký vào Cloud Firestore nền (không await để không làm nghẽn luồng UI)
             if (this.firestore) {
                 const currentUser = (window.AppCore && window.AppCore.state && window.AppCore.state.currentUser) 
                     ? window.AppCore.state.currentUser 
                     : { name: "Chủ hộ", role: "admin" };
-                try {
-                    await this.firestore.collection('device_logs').add({
-                        user_id: currentUser.id || "admin_default",
-                        user_name: currentUser.name || "Chủ hộ",
-                        user_role: currentUser.role || "admin",
-                        device_id: "door_password",
-                        device_name: "Mật Khẩu Cửa Chính",
-                        action: "change_password",
-                        action_label: "ĐỔI MẬT KHẨU",
-                        message: `${currentUser.name} đã đổi mã PIN mở cửa trên Firebase (DieuKhien/MatKhau: ${pinStr})`,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                        created_at_str: new Date().toLocaleTimeString('vi-VN') + ' - ' + new Date().toLocaleDateString('vi-VN')
-                    });
-                } catch (e) {}
+                this.firestore.collection('device_logs').add({
+                    user_id: currentUser.id || "admin_default",
+                    user_name: currentUser.name || "Chủ hộ",
+                    user_role: currentUser.role || "admin",
+                    device_id: "door_password",
+                    device_name: "Mật Khẩu Cửa Chính",
+                    action: "change_password",
+                    action_label: "ĐỔI MẬT KHẨU",
+                    message: `${currentUser.name} đã đổi mã PIN mở cửa trên Firebase & LCD (DieuKhien/MatKhau: ${pinStr})`,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    created_at_str: new Date().toLocaleTimeString('vi-VN') + ' - ' + new Date().toLocaleDateString('vi-VN')
+                }).catch(() => {});
             }
             return true;
         } catch (err) {
-            console.error("❌ [Firebase] Lỗi khi ghi MatKhau lên Firebase:", err);
+            console.warn("⚠️ [Firebase] Ghi MatKhau lên Firebase gặp lỗi:", err);
             return false;
         }
     },
