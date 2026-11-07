@@ -75,8 +75,8 @@
     }
   },
   "thresholds": {
-    "gas_warning_ppm": 300,
-    "gas_danger_ppm": 450,
+    "gas_warning_ppm": 1800,
+    "gas_danger_ppm": 2000,
     "temp_warning_c": 35.0,
     "hum_warning_percent": 85
   },

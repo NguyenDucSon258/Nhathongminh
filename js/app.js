@@ -45,8 +45,8 @@ const AppCore = {
 
         // Ngưỡng cảnh báo
         thresholds: {
-            gasDangerPpm: 400,
-            gasWarningPpm: 280,
+            gasDangerPpm: 2000,
+            gasWarningPpm: 1800,
             tempHighC: 35.0
         },
 
@@ -382,8 +382,8 @@ const AppCore = {
         if (this.state.isMockMode) {
             if (this.state.sensors.temp === null) this.state.sensors.temp = 28.5;
             if (this.state.sensors.hum === null) this.state.sensors.hum = 68;
-            if (this.state.sensors.gasLiving === null) this.state.sensors.gasLiving = 120;
-            if (this.state.sensors.gasKitchen === null) this.state.sensors.gasKitchen = 165;
+            if (this.state.sensors.gasLiving === null) this.state.sensors.gasLiving = 1200;
+            if (this.state.sensors.gasKitchen === null) this.state.sensors.gasKitchen = 1500;
             if (this.state.sensors.pirMotion === null) this.state.sensors.pirMotion = false;
             if (this.state.sensors.isRaining === null) this.state.sensors.isRaining = false;
 
@@ -395,10 +395,10 @@ const AppCore = {
 
             // Gas dao động nhẹ nếu không có báo động
             if (this.state.sensors.gasLiving < this.state.thresholds.gasDangerPpm) {
-                this.state.sensors.gasLiving = Math.max(90, Math.min(220, this.state.sensors.gasLiving + Math.floor((Math.random() - 0.5) * 8)));
+                this.state.sensors.gasLiving = Math.max(1000, Math.min(1800, this.state.sensors.gasLiving + Math.floor((Math.random() - 0.5) * 12)));
             }
             if (this.state.sensors.gasKitchen < this.state.thresholds.gasDangerPpm) {
-                this.state.sensors.gasKitchen = Math.max(110, Math.min(240, this.state.sensors.gasKitchen + Math.floor((Math.random() - 0.5) * 10)));
+                this.state.sensors.gasKitchen = Math.max(1200, Math.min(1850, this.state.sensors.gasKitchen + Math.floor((Math.random() - 0.5) * 15)));
             }
 
             // Tự động thu giàn phơi khi có mưa ở chế độ Auto
@@ -487,7 +487,7 @@ const AppCore = {
         const gasVal = (this.state.sensors.gasKitchen !== null && this.state.sensors.gasKitchen !== undefined) 
             ? this.state.sensors.gasKitchen 
             : this.state.sensors.gasLiving;
-        const isGasDanger = (gasVal !== null && gasVal !== undefined && gasVal >= this.state.thresholds.gasDangerPpm) || Boolean(this.state.sensors.gasAlarm);
+        const isGasDanger = (gasVal !== null && gasVal !== undefined && gasVal > this.state.thresholds.gasDangerPpm) || Boolean(this.state.sensors.gasAlarm);
 
         const banner = document.getElementById('globalAlertBanner');
         const bannerTitle = document.getElementById('globalAlertTitle');
@@ -497,7 +497,7 @@ const AppCore = {
             if (isGasDanger && !this.state.alertDismissed) {
                 banner.classList.add('active');
                 if (bannerTitle) bannerTitle.innerText = "CẢNH BÁO RÒ RỈ KHÍ GAS NGUY HIỂM!";
-                if (bannerDesc) bannerDesc.innerText = `Phát hiện nồng độ khí gas vượt ngưỡng an toàn (>400 PPM): ${gasVal || 1595} PPM.`;
+                if (bannerDesc) bannerDesc.innerText = `Phát hiện nồng độ khí gas vượt ngưỡng an toàn (>${this.state.thresholds.gasDangerPpm} PPM): ${gasVal} PPM.`;
             } else if (!isGasDanger) {
                 banner.classList.remove('active');
                 this.state.alertDismissed = false;
@@ -669,14 +669,15 @@ const AppCore = {
             ? this.state.sensors.gasKitchen 
             : this.state.sensors.gasLiving;
         const hasGas = (gasVal !== null && gasVal !== undefined);
-        const isGasDangerOverall = hasGas && (gasVal >= this.state.thresholds.gasDangerPpm || Boolean(this.state.sensors.gasAlarm));
+        const isGasDangerOverall = hasGas && (gasVal > this.state.thresholds.gasDangerPpm || Boolean(this.state.sensors.gasAlarm));
 
         if (elGasKitchen) {
-            elGasKitchen.innerText = hasGas ? `${gasVal} PPM ${isGasDangerOverall ? '⚠️ NGUY HIỂM' : '(An Toàn)'}` : "Chờ dữ liệu...";
+            elGasKitchen.innerText = hasGas ? `${gasVal} PPM ${isGasDangerOverall ? '⚠️ NGUY HIỂM' : '(Bình Thường)'}` : "Chờ dữ liệu...";
             elGasKitchen.style.color = isGasDangerOverall ? 'var(--accent-red)' : (hasGas ? 'var(--accent-green)' : 'var(--text-muted)');
         }
         if (elBarGasKitchen) {
-            const percent = hasGas ? Math.min(100, Math.max(8, (gasVal / 1000) * 100)) : 0;
+            // Thang đo 3000 PPM (1500 PPM = 50% thanh đo màu xanh; >2000 PPM chuyển sang màu đỏ)
+            const percent = hasGas ? Math.min(100, Math.max(5, (gasVal / 3000) * 100)) : 0;
             elBarGasKitchen.style.width = percent + '%';
             elBarGasKitchen.style.background = isGasDangerOverall ? 'var(--accent-red)' : 'var(--accent-green)';
         }
@@ -685,7 +686,7 @@ const AppCore = {
         const badgeGasAlarm = document.getElementById('ovGasAlarmBadge');
         if (badgeGasAlarm) {
             const isAlarm = Boolean(this.state.sensors.gasAlarm) || isGasDangerOverall;
-            badgeGasAlarm.innerText = isAlarm ? "⚠️ NGUY HIỂM" : "An Toàn";
+            badgeGasAlarm.innerText = isAlarm ? "⚠️ NGUY HIỂM" : "Bình Thường";
             badgeGasAlarm.className = isAlarm ? "status-pill offline" : "status-pill online";
         }
 
@@ -699,7 +700,7 @@ const AppCore = {
                 safetyGas.innerText = `Nguy Hiểm (${gasVal} PPM)`;
                 safetyGas.style.color = "var(--accent-red)";
             } else {
-                safetyGas.innerText = `An Toàn (${gasVal} PPM)`;
+                safetyGas.innerText = `Bình Thường (${gasVal} PPM)`;
                 safetyGas.style.color = "var(--accent-green)";
             }
         }
@@ -1021,16 +1022,16 @@ const AppCore = {
                 lrGasBadge.innerText = "CHỜ CẢM BIẾN";
                 lrGasBadge.className = "status-pill";
             } else {
-                const isDanger = this.state.sensors.gasLiving >= this.state.thresholds.gasDangerPpm;
-                lrGasBadge.innerText = isDanger ? "NGUY HIỂM RÒ RỈ!" : "AN TOÀN";
+                const isDanger = this.state.sensors.gasLiving > this.state.thresholds.gasDangerPpm;
+                lrGasBadge.innerText = isDanger ? "NGUY HIỂM RÒ RỈ!" : "BÌNH THƯỜNG";
                 lrGasBadge.className = isDanger ? "status-pill offline" : "status-pill online";
             }
         }
         if (lrGasDonut) {
             const circumference = 2 * Math.PI * 40;
-            const percent = hasGasLiving ? Math.min(100, (this.state.sensors.gasLiving / 600) * 100) : 0;
+            const percent = hasGasLiving ? Math.min(100, (this.state.sensors.gasLiving / 3000) * 100) : 0;
             lrGasDonut.style.strokeDashoffset = circumference - (percent / 100) * circumference;
-            lrGasDonut.style.stroke = (hasGasLiving && this.state.sensors.gasLiving >= this.state.thresholds.gasDangerPpm) ? "var(--accent-red)" : "var(--accent-primary)";
+            lrGasDonut.style.stroke = (hasGasLiving && this.state.sensors.gasLiving > this.state.thresholds.gasDangerPpm) ? "var(--accent-red)" : "var(--accent-primary)";
         }
     },
 

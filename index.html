@@ -463,6 +463,10 @@
                         <div style="height:6px; background:rgba(255,255,255,0.08); border-radius:99px; overflow:hidden;">
                             <div id="ovBarGasKitchen" style="height:100%; width:0%; background:var(--accent-green); transition:width 0.4s ease;"></div>
                         </div>
+                        <div style="display:flex; justify-content:space-between; font-size:0.68rem; color:var(--text-muted); margin-top:4px;">
+                            <span>0 PPM (Sạch)</span>
+                            <span>Bình thường &le; 2000 PPM</span>
+                        </div>
                     </div>
 
                     <!-- Đèn Bếp -->
@@ -707,8 +711,8 @@
                 <div class="col-6">
                     <div class="card" style="padding:0.75rem;">
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-                            <button class="btn-action" style="font-size:0.75rem; padding:0.4rem;" onclick="AppCore.state.sensors.gasKitchen = 580; AppCore.saveStateToStorage(); AppCore.renderCurrentPage();">
-                                🔥 Giả Lập Gas (>500PPM)
+                            <button class="btn-action" style="font-size:0.75rem; padding:0.4rem;" onclick="AppCore.state.sensors.gasKitchen = 2450; AppCore.saveStateToStorage(); AppCore.renderCurrentPage();">
+                                🔥 Giả Lập Gas (>2000PPM)
                             </button>
                             <button class="btn-action" style="font-size:0.75rem; padding:0.4rem;" onclick="AppCore.state.sensors.isRaining = !AppCore.state.sensors.isRaining; AppCore.saveStateToStorage(); AppCore.renderCurrentPage();">
                                 🌧️ Đổi Mưa / Nắng
