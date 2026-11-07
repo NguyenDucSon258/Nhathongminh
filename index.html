@@ -122,40 +122,48 @@
              ================================================================== -->
         <div class="dashboard-grid">
 
-            <!-- HÀNG 1 - CỘT 1: THẺ TỔNG QUAN HỆ THỐNG (GIỐNG BALANCE CARD TRONG ẢNH MẪU) -->
+            <!-- HÀNG 1 - CỘT 1: THẺ TRẠNG THÁI HỆ THỐNG -->
             <div class="col-4">
-                <div class="highlight-summary-card">
-                    <div class="summary-tag">Trạng Thái Hệ Thống</div>
-                    <div class="summary-number" style="display:flex; align-items:baseline; gap:6px;">
-                        <span>ONLINE</span>
-                        <span style="font-size:1rem; color:#60a5fa; font-weight:600;">v1.2</span>
-                    </div>
-                    <p style="font-size:0.75rem; color:#94a3b8; margin-top:4px;">
-                        Toàn bộ 4 khu vực đang được giám sát thời gian thực
-                    </p>
-
-                    <div class="summary-meta-grid">
-                        <div class="meta-item">
-                            <div class="meta-label">Thiết Bị Kết Nối</div>
-                            <div class="meta-val" style="color:#60a5fa;">7 Thiết bị</div>
+                <div class="card" style="height:100%; display:flex; flex-direction:column;">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon" style="color:var(--accent-green);">
+                                <svg viewBox="0 0 24 24" stroke-width="2">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Trạng Thái Hệ Thống</h3>
+                                <span class="card-subtitle">Giám sát 4 khu vực thời gian thực</span>
+                            </div>
                         </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Mức Độ An Ninh</div>
-                            <div class="meta-val" style="color:#34d399;">100% An Toàn</div>
+                        <span class="status-pill online" style="font-size:0.75rem; padding:0.25rem 0.65rem;">ONLINE v1.2</span>
+                    </div>
+
+                    <!-- Chỉ số thiết bị & an ninh -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:0.75rem;">
+                        <div style="background:var(--card-inner); padding:0.65rem 0.75rem; border-radius:10px; border:1px solid var(--card-border);">
+                            <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.03em;">Thiết Bị Kết Nối</div>
+                            <div style="font-size:1.05rem; font-weight:800; color:var(--accent-primary); margin-top:3px; font-family:monospace;">7 Thiết Bị</div>
+                        </div>
+                        <div style="background:var(--card-inner); padding:0.65rem 0.75rem; border-radius:10px; border:1px solid var(--card-border);">
+                            <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.03em;">Mức Độ An Ninh</div>
+                            <div style="font-size:1.05rem; font-weight:800; color:var(--accent-green); margin-top:3px; font-family:monospace;">100% An Toàn</div>
                         </div>
                     </div>
 
                     <!-- Người dùng điều khiển gần nhất (Realtime sync) -->
-                    <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.12);">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                            <span style="font-size:0.7rem; color:#94a3b8; font-weight:600; text-transform:uppercase;">Thao Tác Gần Nhất:</span>
-                            <span id="lastOperatorTime" style="font-size:0.68rem; color:#cbd5e1; font-family:monospace;">Vừa xong</span>
+                    <div style="margin-top:auto; padding-top:0.75rem; border-top:1px solid var(--card-border);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <span style="font-size:0.7rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.03em;">Thao Tác Gần Nhất:</span>
+                            <span id="lastOperatorTime" style="font-size:0.68rem; color:var(--text-muted); font-family:monospace;">Vừa xong</span>
                         </div>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <div class="user-avatar" id="lastOperatorAvatar" style="width:26px; height:26px; font-size:0.75rem; background:var(--accent-primary);">A</div>
-                            <div style="overflow:hidden;">
-                                <div style="font-size:0.8rem; font-weight:700; color:#ffffff; white-space:nowrap; text-overflow:ellipsis;" id="lastOperatorName">Nguyễn Văn An (Admin)</div>
-                                <div style="font-size:0.72rem; color:#93c5fd; white-space:nowrap; text-overflow:ellipsis;" id="lastOperatorAction">Sẵn sàng điều khiển</div>
+                        <div style="display:flex; align-items:center; gap:8px; background:var(--card-inner); padding:0.55rem 0.75rem; border-radius:10px; border:1px solid var(--card-border);">
+                            <div class="user-avatar" id="lastOperatorAvatar" style="width:28px; height:28px; font-size:0.75rem; background:var(--accent-primary); color:#ffffff; flex-shrink:0;">A</div>
+                            <div style="overflow:hidden; flex:1;">
+                                <div style="font-size:0.8rem; font-weight:700; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="lastOperatorName">Nguyễn Văn An (Admin)</div>
+                                <div style="font-size:0.72rem; color:var(--accent-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="lastOperatorAction">Sẵn sàng điều khiển</div>
                             </div>
                         </div>
                     </div>
