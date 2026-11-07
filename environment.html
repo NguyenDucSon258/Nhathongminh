@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhiệt Độ & Độ Ẩm - Nhà Thông Minh v1</title>
+    <!-- File CSS riêng biệt -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="environmentPageMarker" style="display:none;"></div>
+
+    <div class="app-container">
+        <!-- ==================================================================
+             HEADER & THANH ĐIỀU HƯỚNG DẠNG PILLS
+             ================================================================== -->
+        <header class="top-header">
+            <a href="index.html" class="brand-section">
+                <div class="brand-logo">
+                    <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                </div>
+                <div>
+                    <div class="brand-name">Nhà Thông Minh v1</div>
+                    <div class="brand-sub">Giám Sát Khí Hậu & Môi Trường</div>
+                </div>
+            </a>
+
+            <!-- Navigation Pills -->
+            <nav class="nav-pills">
+                <a href="index.html" class="nav-pill-item">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    <span>Trang Chủ</span>
+                </a>
+                <a href="livingroom.html" class="nav-pill-item">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                    <span>Phòng Khách</span>
+                </a>
+                <a href="environment.html" class="nav-pill-item active">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>
+                    </svg>
+                    <span>Nhiệt Độ & Độ Ẩm</span>
+                </a>
+                <a href="users.html" class="nav-pill-item">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>Thành Viên</span>
+                </a>
+            </nav>
+
+            <div class="header-actions">
+                <div class="clock-widget">
+                    <span id="globalClockText">--:--:--</span>
+                </div>
+
+                <!-- Badge tài khoản người dùng hiện tại -->
+                <div class="user-profile-badge" id="currentUserBadge" onclick="AppCore.openSwitchUserModal()" title="Bấm để chuyển đổi tài khoản người dùng">
+                    <div class="user-avatar" id="headerUserAvatar">A</div>
+                    <div class="user-info-text">
+                        <span class="user-name" id="headerUserName">Nguyễn Văn An</span>
+                        <span class="user-role-tag admin" id="headerUserRole">Admin</span>
+                    </div>
+                </div>
+
+                <div class="status-pill mock" id="globalStatusBadge">
+                    <span class="dot"></span>
+                    <span id="globalStatusText">Mô Phỏng</span>
+                </div>
+                <button class="btn-pill" id="globalMockToggle" onclick="AppCore.toggleMockMode()">
+                    Giả Lập: BẬT
+                </button>
+                <button class="btn-pill" id="themeSwitchBtn" onclick="AppCore.toggleTheme()" title="Bấm để chuyển đổi giao diện: Nền Biệt Thự Kính / Nền Dark Cyber / Nền Sáng">
+                    🏡 Nền Biệt Thự
+                </button>
+                <button class="btn-pill firebase-badge" onclick="SmartHomeFirebase.seedAllFields()" title="Bấm để đồng bộ/tạo các trường dữ liệu mẫu lên Firebase">
+                    🔥 Firebase: Đã Kết Nối
+                </button>
+            </div>
+        </header>
+
+        <!-- BANNER CẢNH BÁO NẾU CÓ KHẨN CẤP -->
+        <div class="alert-banner" id="globalAlertBanner">
+            <div class="alert-banner-left">
+                <div class="alert-bell-icon">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 id="globalAlertTitle" style="font-size:0.95rem; font-weight:700; color:#fee2e2;">CẢNH BÁO SỰ CỐ!</h3>
+                    <p id="globalAlertDesc" style="font-size:0.8rem; color:#fca5a5;">Phát hiện rò rỉ khí gas hoặc thời tiết bất thường.</p>
+                </div>
+            </div>
+            <button class="btn-silence" onclick="AppCore.silenceAlarm()">Tắt Còi</button>
+        </div>
+
+        <!-- ==================================================================
+             BỐ CỤC CHI TIẾT MÔI TRƯỜNG & KHÍ HẬU (ENVIRONMENT DASHBOARD)
+             ================================================================== -->
+        <div class="dashboard-grid">
+
+            <!-- THẺ 1 (CỘT 6): THÔNG SỐ NHIỆT ĐỘ & ĐỘ ẨM DHT22 CHÍNH -->
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon" style="color:#f59e0b;">
+                                <svg viewBox="0 0 24 24" stroke-width="2">
+                                    <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Cảm Biến Môi Trường DHT22</h3>
+                                <span class="card-subtitle">Đo đạc nhiệt độ và độ ẩm chính xác</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                        <!-- Nhiệt độ -->
+                        <div class="card-widget-item">
+                            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Nhiệt độ hiện tại:</div>
+                            <div style="font-size:2.4rem; font-weight:800; font-family:monospace; color:var(--text-primary);">
+                                <span id="envTemp">--</span><span style="font-size:1.2rem; color:var(--accent-amber);">°C</span>
+                            </div>
+                            <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">
+                                Thấp nhất: <span id="envTempMin" style="color:var(--accent-primary);">--</span> &bull; Cao nhất: <span id="envTempMax" style="color:#ef4444;">--</span>
+                            </div>
+                        </div>
+
+                        <!-- Độ ẩm -->
+                        <div class="card-widget-item">
+                            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Độ ẩm tương đối:</div>
+                            <div style="font-size:2.4rem; font-weight:800; font-family:monospace; color:var(--text-primary);">
+                                <span id="envHum">--</span><span style="font-size:1.2rem; color:var(--accent-primary);">%</span>
+                            </div>
+                            <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">
+                                Đánh giá: <span id="envComfort" style="color:var(--text-muted); font-weight:600;">Chờ dữ liệu phần cứng...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thanh đo tiến trình mô phỏng độ ẩm -->
+                    <div class="card-widget-item">
+                        <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:6px;">
+                            <span style="color:var(--text-muted);">Mức độ ẩm trong không khí:</span>
+                            <span style="color:var(--accent-primary); font-weight:700;">Chờ cảm biến DHT22</span>
+                        </div>
+                        <div style="height:8px; background:rgba(255,255,255,0.08); border-radius:99px; overflow:hidden;">
+                            <div id="envBarHum" style="height:100%; width:0%; background:var(--accent-primary); border-radius:99px; transition:width 0.5s ease;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- THẺ 2 (CỘT 6): CẢM BIẾN MƯA & GIÀN PHƠI TỰ ĐỘNG -->
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon" style="color:var(--accent-blue);">
+                                <svg viewBox="0 0 24 24" stroke-width="2">
+                                    <line x1="16" y1="13" x2="16" y2="21"></line>
+                                    <line x1="8" y1="13" x2="8" y2="21"></line>
+                                    <line x1="12" y1="15" x2="12" y2="23"></line>
+                                    <path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Cảm Biến Mưa & Giàn Phơi</h3>
+                                <span class="card-subtitle">Bảo vệ quần áo khi thời tiết thay đổi</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                        <div class="card-widget-item">
+                            <span style="font-size:0.75rem; color:var(--text-muted);">Cảm biến thời tiết:</span>
+                            <div id="ovWeatherStatus" style="font-size:1.1rem; font-weight:700; color:var(--accent-amber); margin-top:4px;">
+                                ☀️ Khô ráo / Hửng nắng
+                            </div>
+                        </div>
+
+                        <div class="card-widget-item">
+                            <span style="font-size:0.75rem; color:var(--text-muted);">Vị trí giàn phơi:</span>
+                            <div id="ovRackStatus" style="font-size:1.1rem; font-weight:700; color:var(--accent-green); margin-top:4px;">
+                                Đang vươn ra (Phơi)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-widget-item">
+                        <div style="font-size:0.8rem; font-weight:600; margin-bottom:8px;">Điều khiển vị trí giàn phơi:</div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                            <button class="btn-action" style="justify-content:center;" onclick="AppCore.sendCommand('rack', 'retract')">
+                                Kéo Giàn Vào (Tránh Mưa)
+                            </button>
+                            <button class="btn-action" style="justify-content:center;" onclick="AppCore.sendCommand('rack', 'extend')">
+                                Đưa Giàn Ra (Phơi Đồ)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- THẺ 3 (CỘT 12): BIỂU ĐỒ SÓNG DAO ĐỘNG KHÍ HẬU (GIỐNG COMPARE COSTS TRONG ẢNH MẪU) -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon">
+                                <svg viewBox="0 0 24 24" stroke-width="2">
+                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Đồ Thị Xu Hướng Khí Hậu Trong Ngày</h3>
+                                <span class="card-subtitle">Đường cong dao động nhiệt độ và độ ẩm theo giờ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Wave SVG Chart thanh lịch -->
+                    <div class="chart-container-svg">
+                        <svg viewBox="0 0 600 120" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="waveGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#2563eb" stop-opacity="0.18"></stop>
+                                    <stop offset="100%" stop-color="#2563eb" stop-opacity="0.02"></stop>
+                                </linearGradient>
+                            </defs>
+                            <!-- Vùng gradient dưới đường cong -->
+                            <path d="M0,80 Q100,50 200,75 T400,35 T600,60 L600,120 L0,120 Z" fill="url(#waveGradient)"></path>
+                            <!-- Đường cong chính -->
+                            <path d="M0,80 Q100,50 200,75 T400,35 T600,60" fill="none" stroke="var(--accent-primary)" stroke-width="2.5"></path>
+                            <!-- Điểm mốc trên đồ thị -->
+                            <circle cx="100" cy="62" r="4.5" fill="#ffffff" stroke="var(--accent-primary)" stroke-width="2.5"></circle>
+                            <circle cx="200" cy="75" r="4.5" fill="#ffffff" stroke="var(--accent-primary)" stroke-width="2.5"></circle>
+                            <circle cx="400" cy="35" r="4.5" fill="#ffffff" stroke="var(--accent-primary)" stroke-width="2.5"></circle>
+                            <circle cx="500" cy="48" r="4.5" fill="#ffffff" stroke="var(--accent-primary)" stroke-width="2.5"></circle>
+                        </svg>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-muted); margin-top:8px; font-family:monospace;">
+                        <span>00:00 (25.4°C)</span>
+                        <span>04:00 (24.8°C)</span>
+                        <span>08:00 (27.2°C)</span>
+                        <span>12:00 (31.8°C)</span>
+                        <span>16:00 (30.5°C)</span>
+                        <span>20:00 (28.5°C)</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal chuyển đổi tài khoản người dùng nhanh -->
+    <div class="modal-overlay" id="switchUserModalOverlay">
+        <div class="modal-card" style="max-width:440px; text-align:left;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <h3 style="font-size:1.1rem; font-weight:700;">Chuyển Đổi Người Dùng Đang Thao Tác</h3>
+                <span style="font-size:1.4rem; cursor:pointer; color:var(--text-muted);" onclick="AppCore.closeSwitchUserModal()">&times;</span>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">
+                Chọn một thành viên trong gia đình để trải nghiệm phân quyền điều khiển:
+            </p>
+            <div id="quickSwitchUserList" style="display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto;">
+            </div>
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        Hệ Thống Nhà Thông Minh v1 &bull; Giám Sát Khí Hậu Môi Trường &bull; Đồng bộ Firebase: iot-smarthome2-dbf39
+    </footer>
+
+    <!-- Thư viện Firebase SDK Compat cho trình duyệt -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <!-- File Cấu hình & Đồng bộ Firebase -->
+    <script src="js/firebase-config.js"></script>
+    <!-- File JavaScript Core ứng dụng -->
+    <script src="js/app.js"></script>
+</body>
+</html>

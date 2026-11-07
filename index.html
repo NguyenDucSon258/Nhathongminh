@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang Chủ - Nhà Thông Minh v1</title>
+    <!-- File CSS riêng biệt theo chuẩn phong cách Cyber Dark & Glassmorphism -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="overviewPageMarker" style="display:none;"></div>
+
+    <div class="app-container">
+        <!-- ==================================================================
+             HEADER & THANH ĐIỀU HƯỚNG DẠNG PILLS (THEO HÌNH ẢNH MẪU)
+             ================================================================== -->
+        <header class="top-header">
+            <!-- Brand Logo -->
+            <a href="index.html" class="brand-section">
+                <div class="brand-logo">
+                    <!-- Home Icon -->
+                    <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                </div>
+                <div>
+                    <div class="brand-name">Nhà Thông Minh v1</div>
+                    <div class="brand-sub">Central IoT Hub</div>
+                </div>
+            </a>
+
+            <!-- Capsule Pills Navigation điều hướng giữa các trang -->
+            <nav class="nav-pills">
+                <a href="index.html" class="nav-pill-item active">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>+
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    <span>Trang Chủ</span>
+                </a>
+                <a href="livingroom.html" class="nav-pill-item">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                    <span>Phòng Khách</span>
+                </a>
+                <a href="environment.html" class="nav-pill-item">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>
+                    </svg>
+                    <span>Nhiệt Độ & Độ Ẩm</span>
+                </a>
+                <a href="users.html" class="nav-pill-item">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>Thành Viên</span>
+                </a>
+            </nav>
+
+            <!-- Nhóm công cụ bên phải -->
+            <div class="header-actions">
+                <div class="clock-widget">
+                    <span id="globalClockText">--:--:--</span>
+                </div>
+
+                <!-- Badge tài khoản người dùng hiện tại -->
+                <div class="user-profile-badge" id="currentUserBadge" onclick="AppCore.openSwitchUserModal()" title="Bấm để chuyển đổi tài khoản người dùng">
+                    <div class="user-avatar" id="headerUserAvatar">A</div>
+                    <div class="user-info-text">
+                        <span class="user-name" id="headerUserName">Nguyễn Văn An</span>
+                        <span class="user-role-tag admin" id="headerUserRole">Admin</span>
+                    </div>
+                </div>
+
+                <div class="status-pill mock" id="globalStatusBadge">
+                    <span class="dot"></span>
+                    <span id="globalStatusText">Mô Phỏng</span>
+                </div>
+
+                <button class="btn-pill" id="globalMockToggle" onclick="AppCore.toggleMockMode()">
+                    Giả Lập: BẬT
+                </button>
+
+                <button class="btn-pill" style="background:#fee2e2; color:#b91c1c; border-color:#fca5a5;" onclick="SmartHomeFirebase.cleanupOldSmarthomeTree()" title="Bấm để xóa sạch nhánh 'smarthome' cũ trên Firebase Realtime DB">
+                    🧹 Xóa Nhánh Cũ
+                </button>
+
+                <button class="btn-pill firebase-badge" id="btnFirebaseSync" onclick="SmartHomeFirebase.seedAllFields()" title="Bấm để đồng bộ hoặc khởi tạo dữ liệu tối ưu lên Firebase">
+                    🔥 Firebase: Đã Kết Nối
+                </button>
+            </div>
+        </header>
+
+        <!-- BANNER CẢNH BÁO KHẨN CẤP TOÀN HỆ THỐNG -->
+        <div class="alert-banner" id="globalAlertBanner">
+            <div class="alert-banner-left">
+                <div class="alert-bell-icon">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 id="globalAlertTitle" style="font-size:0.95rem; font-weight:700; color:#fee2e2;">CẢNH BÁO SỰ CỐ KHẨN CẤP!</h3>
+                    <p id="globalAlertDesc" style="font-size:0.8rem; color:#fca5a5;">Phát hiện nồng độ gas nguy hiểm hoặc kích hoạt còi báo động.</p>
+                </div>
+            </div>
+            <button class="btn-silence" onclick="AppCore.silenceAlarm()">Tắt Còi Hú</button>
+        </div>
+
+        <!-- ==================================================================
+             BỐ CỤC CHÍNH (THEO CẤU TRÚC DASHBOARD GRID HÌNH MẪU)
+             ================================================================== -->
+        <div class="dashboard-grid">
+
+            <!-- HÀNG 1 - CỘT 1: THẺ TỔNG QUAN HỆ THỐNG (GIỐNG BALANCE CARD TRONG ẢNH MẪU) -->
+            <div class="col-4">
+                <div class="highlight-summary-card">
+                    <div class="summary-tag">Trạng Thái Hệ Thống</div>
+                    <div class="summary-number" style="display:flex; align-items:baseline; gap:6px;">
+                        <span>ONLINE</span>
+                        <span style="font-size:1rem; color:#60a5fa; font-weight:600;">v1.2</span>
+                    </div>
+                    <p style="font-size:0.75rem; color:#94a3b8; margin-top:4px;">
+                        Toàn bộ 4 khu vực đang được giám sát thời gian thực
+                    </p>
+
+                    <div class="summary-meta-grid">
+                        <div class="meta-item">
+                            <div class="meta-label">Thiết Bị Kết Nối</div>
+                            <div class="meta-val" style="color:#60a5fa;">7 Thiết bị</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Mức Độ An Ninh</div>
+                            <div class="meta-val" style="color:#34d399;">100% An Toàn</div>
+                        </div>
+                    </div>
+
+                    <!-- Người dùng điều khiển gần nhất (Realtime sync) -->
+                    <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.12);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <span style="font-size:0.7rem; color:#94a3b8; font-weight:600; text-transform:uppercase;">Thao Tác Gần Nhất:</span>
+                            <span id="lastOperatorTime" style="font-size:0.68rem; color:#cbd5e1; font-family:monospace;">Vừa xong</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div class="user-avatar" id="lastOperatorAvatar" style="width:26px; height:26px; font-size:0.75rem; background:var(--accent-primary);">A</div>
+                            <div style="overflow:hidden;">
+                                <div style="font-size:0.8rem; font-weight:700; color:#ffffff; white-space:nowrap; text-overflow:ellipsis;" id="lastOperatorName">Nguyễn Văn An (Admin)</div>
+                                <div style="font-size:0.72rem; color:#93c5fd; white-space:nowrap; text-overflow:ellipsis;" id="lastOperatorAction">Sẵn sàng điều khiển</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HÀNG 1 - CỘT 2: DONUT GAUGE ĐỘ ẨM & MÔI TRƯỜNG -->
+            <div class="col-4">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon">
+                                <svg viewBox="0 0 24 24" stroke-width="2">
+                                    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Môi Trường DHT22</h3>
+                                <span class="card-subtitle">Độ ẩm & Nhiệt độ cảm biến</span>
+                            </div>
+                        </div>
+                        <a href="environment.html" class="card-action-link">Chi tiết &rarr;</a>
+                    </div>
+
+                    <div class="donut-gauge-box">
+                        <div class="donut-svg-wrap">
+                            <svg width="105" height="105">
+                                <circle class="donut-bg-ring" cx="52" cy="52" r="38" stroke-width="9" fill="none"></circle>
+                                <circle id="ovHumDonutCircle" class="donut-val-ring" cx="52" cy="52" r="38" stroke-width="9" fill="none" style="stroke-dasharray: 238.7; stroke-dashoffset: 75;"></circle>
+                            </svg>
+                            <div class="donut-inner-text">
+                                <div class="donut-num" id="ovHum">--</div>
+                                <div class="donut-unit">% Độ Ẩm</div>
+                            </div>
+                        </div>
+
+                        <div class="donut-info-list">
+                            <div class="donut-info-row">
+                                <span class="label">
+                                    <span class="indicator-dot" style="background:#f59e0b;"></span>
+                                    Nhiệt độ:
+                                </span>
+                                <span class="val"><span id="ovTemp">--</span>°C</span>
+                            </div>
+                            <div class="donut-info-row">
+                                <span class="label">
+                                    <span class="indicator-dot" style="background:var(--accent-primary);"></span>
+                                    Độ ẩm:
+                                </span>
+                                <span class="val">Chờ dữ liệu...</span>
+                            </div>
+                            <div class="donut-info-row">
+                                <span class="label">
+                                    <span class="indicator-dot" style="background:var(--accent-green);"></span>
+                                    Tiện nghi:
+                                </span>
+                                <span class="val" style="color:var(--text-muted);">Chờ cảm biến</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HÀNG 1 - CỘT 3: CẤU TRÚC AN TOÀN TỔNG THỂ -->
+            <div class="col-4">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon">
+                                <svg viewBox="0 0 24 24" stroke-width="2">
+                                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                                    <polyline points="2 17 12 22 22 17"></polyline>
+                                    <polyline points="2 12 12 17 22 12"></polyline>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Chỉ Số An Toàn</h3>
+                                <span class="card-subtitle">Mạng lưới 4 khu vực</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mini Spider / Radar SVG gọn gàng -->
+                    <div style="height:85px; display:flex; align-items:center; justify-content:center; margin:0.25rem 0;">
+                        <svg width="95" height="85" viewBox="0 0 100 100">
+                            <polygon points="50,10 90,38 75,85 25,85 10,38" fill="none" stroke="#cbd5e1" stroke-width="1.5"></polygon>
+                            <polygon points="50,25 78,44 68,75 32,75 22,44" fill="none" stroke="#e2e8f0" stroke-width="1"></polygon>
+                            <polygon points="50,18 84,40 70,80 30,80 18,40" fill="rgba(37, 99, 235, 0.12)" stroke="var(--accent-primary)" stroke-width="2"></polygon>
+                            <circle cx="50" cy="18" r="3" fill="var(--accent-primary)"></circle>
+                            <circle cx="84" cy="40" r="3" fill="var(--accent-primary)"></circle>
+                            <circle cx="70" cy="80" r="3" fill="var(--accent-primary)"></circle>
+                            <circle cx="30" cy="80" r="3" fill="var(--accent-primary)"></circle>
+                            <circle cx="18" cy="40" r="3" fill="var(--accent-primary)"></circle>
+                        </svg>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:auto;">
+                        <div style="background:var(--card-inner); padding:0.35rem 0.55rem; border-radius:8px; border:1px solid var(--card-border); font-size:0.72rem; display:flex; justify-content:space-between;">
+                            <span style="color:var(--text-muted);">An Ninh:</span>
+                            <span style="font-weight:700; color:var(--accent-green);">100% Tốt</span>
+                        </div>
+                        <div style="background:var(--card-inner); padding:0.35rem 0.55rem; border-radius:8px; border:1px solid var(--card-border); font-size:0.72rem; display:flex; justify-content:space-between;">
+                            <span style="color:var(--text-muted);">Khí Gas:</span>
+                            <span style="font-weight:700; color:var(--accent-primary);">An Toàn</span>
+                        </div>
+                        <div style="background:var(--card-inner); padding:0.35rem 0.55rem; border-radius:8px; border:1px solid var(--card-border); font-size:0.72rem; display:flex; justify-content:space-between;">
+                            <span style="color:var(--text-muted);">Cháy Nổ:</span>
+                            <span style="font-weight:700; color:var(--accent-green);">Bình Thường</span>
+                        </div>
+                        <div style="background:var(--card-inner); padding:0.35rem 0.55rem; border-radius:8px; border:1px solid var(--card-border); font-size:0.72rem; display:flex; justify-content:space-between;">
+                            <span style="color:var(--text-muted);">Mưa Bão:</span>
+                            <span style="font-weight:700; color:var(--text-secondary);">Theo Dõi</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HÀNG 2 - CỘT 1 (CHIẾM 6 CỘT): BIỂU ĐỒ DAO ĐỘNG CẢM BIẾN -->
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon">
+                                <svg viewBox="0 0 24 24" stroke-width="2">
+                                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Mô Phỏng Biến Thiên Nhiệt Độ 24h</h3>
+                                <span class="card-subtitle">Thống kê các mốc thời gian trong ngày</span>
+                            </div>
+                        </div>
+                        <span class="status-pill online" style="font-size:0.68rem; padding:0.25rem 0.6rem;">Chu Kỳ 24h</span>
+                    </div>
+
+                    <!-- Biểu đồ cột mini style Inflow -->
+                    <div class="mini-bar-chart">
+                        <div class="bar-col"><div class="bar-pill" style="height:45%;"></div><span class="bar-label">00h</span></div>
+                        <div class="bar-col"><div class="bar-pill" style="height:35%;"></div><span class="bar-label">03h</span></div>
+                        <div class="bar-col"><div class="bar-pill" style="height:40%;"></div><span class="bar-label">06h</span></div>
+                        <div class="bar-col"><div class="bar-pill" style="height:65%;"></div><span class="bar-label">09h</span></div>
+                        <div class="bar-col active"><div class="bar-pill" style="height:88%;"></div><span class="bar-label">12h</span></div>
+                        <div class="bar-col active"><div class="bar-pill" style="height:92%;"></div><span class="bar-label">15h</span></div>
+                        <div class="bar-col"><div class="bar-pill" style="height:70%;"></div><span class="bar-label">18h</span></div>
+                        <div class="bar-col active"><div class="bar-pill" style="height:62%;"></div><span class="bar-label">21h</span></div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.85rem; padding-top:0.65rem; border-top:1px solid var(--card-border); font-size:0.75rem; color:var(--text-muted);">
+                        <span>Thấp nhất: <strong style="color:var(--accent-primary);">24°C</strong> (03h)</span>
+                        <span>Trung bình: <strong style="color:var(--text-primary);">28.5°C</strong></span>
+                        <span>Đỉnh nhiệt: <strong style="color:#ef4444;">32°C</strong> (15h)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HÀNG 2 - CỘT 2 (CHIẾM 6 CỘT): PHÒNG KHÁCH NHANH -->
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon">
+                                <svg viewBox="0 0 24 24" stroke-width="2">
+                                    <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Phòng Khách</h3>
+                                <span class="card-subtitle">Khóa cửa Servo & Chiếu sáng</span>
+                            </div>
+                        </div>
+                        <a href="livingroom.html" class="card-action-link">Chi tiết &rarr;</a>
+                    </div>
+
+                    <!-- Khóa cửa Servo -->
+                    <div class="card-widget-item">
+                        <div class="control-row">
+                            <div class="control-info">
+                                <div class="control-icon" id="ovDoorIcon">
+                                    <svg viewBox="0 0 24 24" stroke-width="2">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="control-name">Cửa Chính (Servo 90°)</div>
+                                    <div class="control-desc" id="ovDoorState">Đang Đóng (Khóa 0°)</div>
+                                </div>
+                            </div>
+                            <button class="btn-action" id="ovBtnDoor" onclick="AppCore.sendCommand('door', AppCore.state.devices.doorLocked ? 'unlock' : 'lock')">
+                                Mở Khóa (90°)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Đèn phòng khách -->
+                    <div class="card-widget-item">
+                        <div class="control-row">
+                            <div class="control-info">
+                                <div class="control-icon">
+                                    <svg viewBox="0 0 24 24" stroke-width="2">
+                                        <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-7 7c0 2.5 1.5 4.5 3 6h8c1.5-1.5 3-3.5 3-6a7 7 0 0 0-7-7z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="control-name">Đèn Phòng Khách</div>
+                                    <div class="control-desc">Công tắc rơ-le chiếu sáng</div>
+                                </div>
+                            </div>
+                            <label class="cyber-switch">
+                                <input type="checkbox" id="ovSwitchLightLiving" onchange="AppCore.sendCommand('light_living', this.checked ? 'on' : 'off')">
+                                <span class="cyber-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HÀNG 3 - CỘT 1: PHÒNG BẾP (CHÁY NỔ & GAS) -->
+            <div class="col-4">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon" style="color:var(--accent-amber);">
+                                <svg viewBox="0 0 24 24" stroke-width="2">
+                                    <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+                                    <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+                                    <line x1="6" y1="1" x2="6" y2="4"></line>
+                                    <line x1="10" y1="1" x2="10" y2="4"></line>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Phòng Bếp</h3>
+                                <span class="card-subtitle">Khí gas MQ2 & Hút mùi</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gas Bếp Meter -->
+                    <div class="card-widget-item">
+                        <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:6px;">
+                            <span style="color:var(--text-secondary);">Khí Gas MQ2 Bếp:</span>
+                            <span id="ovGasKitchen" style="font-weight:700; font-family:monospace; color:var(--text-muted);">Chờ dữ liệu...</span>
+                        </div>
+                        <div style="height:6px; background:rgba(255,255,255,0.08); border-radius:99px; overflow:hidden;">
+                            <div id="ovBarGasKitchen" style="height:100%; width:0%; background:var(--accent-green); transition:width 0.4s ease;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Đèn Bếp -->
+                    <div class="card-widget-item">
+                        <div class="control-row">
+                            <span style="font-size:0.85rem; font-weight:600;">Đèn Phòng Bếp</span>
+                            <label class="cyber-switch">
+                                <input type="checkbox" id="ovSwitchLightKitchen" onchange="AppCore.sendCommand('light_kitchen', this.checked ? 'on' : 'off')">
+                                <span class="cyber-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Quạt Bếp -->
+                    <div class="card-widget-item">
+                        <div class="control-row">
+                            <span style="font-size:0.85rem; font-weight:600;">Quạt Hút Khói</span>
+                            <label class="cyber-switch">
+                                <input type="checkbox" id="ovSwitchFanKitchen" onchange="AppCore.sendCommand('fan_kitchen', this.checked ? 'on' : 'off')">
+                                <span class="cyber-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HÀNG 3 - CỘT 2: SÂN PHƠI TỰ ĐỘNG -->
+            <div class="col-4">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon" style="color:var(--accent-blue);">
+                                <svg viewBox="0 0 24 24" stroke-width="2">
+                                    <path d="M20 16.2A4.5 4.5 0 0 0 17.5 8h-1.8A7 7 0 1 0 4 14.9"></path>
+                                    <path d="M16 19h6M4 19h10"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Sân Phơi Tự Động</h3>
+                                <span class="card-subtitle">Thời tiết & Giàn phơi đồ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-widget-item">
+                        <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+                            <span style="color:var(--text-secondary);">Thời tiết:</span>
+                            <span id="ovWeatherStatus" style="font-weight:700; color:var(--accent-amber);">☀️ Khô ráo / Hửng nắng</span>
+                        </div>
+                    </div>
+
+                    <div class="card-widget-item">
+                        <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+                            <span style="color:var(--text-secondary);">Vị trí giàn:</span>
+                            <span id="ovRackStatus" style="font-weight:700; color:var(--accent-green);">Đang vươn ra (Phơi)</span>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:auto;">
+                        <button class="btn-action" style="justify-content:center;" onclick="AppCore.sendCommand('rack', 'retract')">
+                            Kéo Giàn Vào
+                        </button>
+                        <button class="btn-action" style="justify-content:center;" onclick="AppCore.sendCommand('rack', 'extend')">
+                            Đưa Giàn Ra
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HÀNG 3 - CỘT 3: PHÒNG NGỦ & BÁO ĐỘNG KHẨN CẤP -->
+            <div class="col-4">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon" style="color:var(--accent-indigo);">
+                                <svg viewBox="0 0 24 24" stroke-width="2">
+                                    <path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Phòng Ngủ & Còi Báo</h3>
+                                <span class="card-subtitle">Chiếu sáng & Khẩn cấp</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-widget-item">
+                        <div class="control-row">
+                            <span style="font-size:0.85rem; font-weight:600;">Đèn Phòng Ngủ</span>
+                            <label class="cyber-switch">
+                                <input type="checkbox" id="ovSwitchLightBedroom" onchange="AppCore.sendCommand('light_bedroom', this.checked ? 'on' : 'off')">
+                                <span class="cyber-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div style="text-align:center; padding:1rem 0; margin-top:auto;">
+                        <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:10px;">
+                            Kích hoạt hệ thống còi hú báo động toàn bộ căn nhà
+                        </p>
+                        <button class="btn-action btn-danger" id="ovBtnAlarm" style="width:100%; justify-content:center; padding:0.75rem;" onclick="AppCore.sendCommand('alarm', AppCore.state.devices.alarmActive ? 'off' : 'on')">
+                            BẬT CÒI KHẨN CẤP
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ==================================================================
+             BẢNG CÔNG CỤ TEST GIẢ LẬP NHANH & NHẬT KÝ SỰ KIỆN
+             ================================================================== -->
+        <div class="dashboard-grid" style="margin-top:1.5rem;">
+            <div class="col-6">
+                <div class="card">
+                    <h3 class="card-title" style="margin-bottom:0.75rem;">⚡ Công Cụ Thử Nghiệm Mô Phỏng Tức Thì</h3>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <button class="btn-action" onclick="AppCore.state.sensors.gasKitchen = 580; AppCore.saveStateToStorage(); AppCore.renderCurrentPage();">
+                            🔥 Giả Lập Gas Bếp (>500PPM)
+                        </button>
+                        <button class="btn-action" onclick="AppCore.state.sensors.isRaining = !AppCore.state.sensors.isRaining; AppCore.saveStateToStorage(); AppCore.renderCurrentPage();">
+                            🌧️ Đổi Thời Tiết Mưa/Nắng
+                        </button>
+                        <button class="btn-action" onclick="AppCore.state.sensors.pirMotion = true; AppCore.saveStateToStorage(); AppCore.renderCurrentPage(); setTimeout(() => { AppCore.state.sensors.pirMotion = false; AppCore.renderCurrentPage(); }, 5000);">
+                            🚶 Giả Lập PIR Có Người
+                        </button>
+                        <button class="btn-action" onclick="SmartHomeFirebase.seedAllFields();">
+                            🔥 Đồng Bộ Lên Firebase
+                        </button>
+                        <button class="btn-action btn-danger" style="grid-column: 1 / -1; justify-content:center;" onclick="SmartHomeFirebase.cleanupOldSmarthomeTree();" title="Xóa bỏ vĩnh viễn nhánh 'smarthome' cồng kềnh cũ trên Firebase Realtime DB">
+                            🧹 Xóa Bỏ Nhánh 'smarthome' Cũ Trên Firebase
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6">
+                <div class="card">
+                    <h3 class="card-title" style="margin-bottom:0.75rem;">📋 Nhật Ký Hoạt Động (Activity Log)</h3>
+                    <div id="globalLogBox" style="height:100px; overflow-y:auto; font-family:monospace; font-size:0.75rem; color:var(--text-secondary); display:flex; flex-direction:column; gap:4px;">
+                        <div>[Hệ thống] Dashboard đã sẵn sàng.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal chuyển đổi tài khoản người dùng nhanh -->
+    <div class="modal-overlay" id="switchUserModalOverlay">
+        <div class="modal-card" style="max-width:440px; text-align:left;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <h3 style="font-size:1.1rem; font-weight:700;">Chuyển Đổi Người Dùng Đang Thao Tác</h3>
+                <span style="font-size:1.4rem; cursor:pointer; color:var(--text-muted);" onclick="AppCore.closeSwitchUserModal()">&times;</span>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">
+                Chọn một thành viên trong gia đình để trải nghiệm phân quyền điều khiển:
+            </p>
+            <div id="quickSwitchUserList" style="display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto;">
+            </div>
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        Hệ Thống Nhà Thông Minh v1 &bull; Đồng bộ Firebase: iot-smarthome2-dbf39 &bull; Quản lý Cloud Firestore
+    </footer>
+
+    <!-- Thư viện Firebase SDK Compat cho trình duyệt -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <!-- File Cấu hình & Đồng bộ Firebase -->
+    <script src="js/firebase-config.js"></script>
+    <!-- File JavaScript Core ứng dụng -->
+    <script src="js/app.js"></script>
+</body>
+</html>

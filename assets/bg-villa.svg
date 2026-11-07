@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="100%" height="100%">
+  <defs>
+    <!-- Bầu trời chiều tối hoàng hôn dịu nhẹ hiện đại -->
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#93c5fd" />
+      <stop offset="45%" stop-color="#bfdbfe" />
+      <stop offset="75%" stop-color="#dbeafe" />
+      <stop offset="100%" stop-color="#eff6ff" />
+    </linearGradient>
+
+    <!-- Nền kiến trúc biệt thự thông minh -->
+    <linearGradient id="wallLight" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f1f5f9" />
+    </linearGradient>
+
+    <linearGradient id="concreteDark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#334155" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+
+    <!-- Cửa kính phản chiếu & Ánh sáng ấm nội thất (Smart Home Ambient Glow) -->
+    <linearGradient id="glassGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" stop-opacity="0.85" />
+      <stop offset="50%" stop-color="#fed7aa" stop-opacity="0.75" />
+      <stop offset="100%" stop-color="#fbcfe8" stop-opacity="0.6" />
+    </linearGradient>
+
+    <linearGradient id="glassUpper" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#bae6fd" stop-opacity="0.7" />
+      <stop offset="100%" stop-color="#e0f2fe" stop-opacity="0.85" />
+    </linearGradient>
+
+    <!-- Mặt nước hồ bơi phẳng lặng phản chiếu thông minh -->
+    <linearGradient id="poolGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="40%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0ea5e9" />
+    </linearGradient>
+
+    <!-- Thảm cỏ xanh mướt phía trước -->
+    <linearGradient id="lawnGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#86efac" />
+      <stop offset="40%" stop-color="#4ade80" />
+      <stop offset="100%" stop-color="#22c55e" />
+    </linearGradient>
+  </defs>
+
+  <!-- 1. Bầu trời -->
+  <rect width="1920" height="1080" fill="url(#skyGrad)" />
+
+  <!-- Mặt trời dịu ấm hoàng hôn sau rặng cây -->
+  <circle cx="1400" cy="380" r="160" fill="#fef08a" opacity="0.35" filter="blur(20px)" />
+
+  <!-- Dãy núi xa / Cây xanh phía sau -->
+  <path d="M 0,680 Q 300,620 650,660 T 1300,640 T 1920,670 L 1920,1080 L 0,1080 Z" fill="#cbd5e1" opacity="0.5" />
+  <path d="M 0,720 Q 400,680 850,710 T 1600,690 T 1920,730 L 1920,1080 L 0,1080 Z" fill="#94a3b8" opacity="0.4" />
+
+  <!-- 2. Khối kiến trúc biệt thự thông minh (Modern Smart Villa Architecture) -->
+  <!-- Mái hiên tầng 2 nhô ra phong cách tối giản -->
+  <rect x="360" y="320" width="1200" height="25" rx="4" fill="url(#concreteDark)" />
+  <rect x="420" y="345" width="1080" height="260" fill="url(#wallLight)" />
+
+  <!-- Dải cửa kính toàn cảnh tầng 2 (Floor-to-Ceiling Windows) -->
+  <rect x="460" y="370" width="320" height="200" rx="4" fill="url(#glassUpper)" stroke="#475569" stroke-width="3" />
+  <line x1="620" y1="370" x2="620" y2="570" stroke="#475569" stroke-width="2" />
+  
+  <rect x="820" y="370" width="300" height="200" rx="4" fill="url(#glassGlow)" stroke="#475569" stroke-width="3" />
+  <line x1="970" y1="370" x2="970" y2="570" stroke="#475569" stroke-width="2" />
+
+  <rect x="1160" y="370" width="300" height="200" rx="4" fill="url(#glassUpper)" stroke="#475569" stroke-width="3" />
+  <line x1="1310" y1="370" x2="1310" y2="570" stroke="#475569" stroke-width="2" />
+
+  <!-- Ban công kính cường lực tầng 2 -->
+  <rect x="420" y="550" width="1080" height="55" fill="#e2e8f0" opacity="0.6" stroke="#94a3b8" stroke-width="2" />
+
+  <!-- Tầng trệt (Ground Floor) - Phòng khách & Không gian mở kết nối sân vườn -->
+  <rect x="320" y="605" width="1280" height="28" rx="4" fill="url(#concreteDark)" />
+  <rect x="380" y="633" width="1160" height="260" fill="url(#wallLight)" />
+
+  <!-- Cửa trượt kính lớn phòng khách (Living Room Glass Facade) với ánh đèn ấm -->
+  <rect x="420" y="650" width="480" height="235" rx="4" fill="url(#glassGlow)" stroke="#334155" stroke-width="4" />
+  <line x1="580" y1="650" x2="580" y2="885" stroke="#334155" stroke-width="3" />
+  <line x1="740" y1="650" x2="740" y2="885" stroke="#334155" stroke-width="3" />
+
+  <!-- Gian bếp & Phòng ăn hiện đại bên phải -->
+  <rect x="940" y="650" width="560" height="235" rx="4" fill="url(#glassGlow)" stroke="#334155" stroke-width="4" />
+  <line x1="1120" y1="650" x2="1120" y2="885" stroke="#334155" stroke-width="3" />
+  <line x1="1310" y1="650" x2="1310" y2="885" stroke="#334155" stroke-width="3" />
+
+  <!-- Đèn chiếu sáng hắt tường kiến trúc thông minh (Smart Wall Sconces) -->
+  <circle cx="400" cy="680" r="8" fill="#fde047" filter="blur(3px)" />
+  <circle cx="920" cy="680" r="8" fill="#fde047" filter="blur(3px)" />
+  <circle cx="1520" cy="680" r="8" fill="#fde047" filter="blur(3px)" />
+
+  <!-- 3. Sân hiên gỗ cao cấp & Hồ bơi biệt thự -->
+  <!-- Sân hiên Decking gỗ trước nhà -->
+  <polygon points="150,890 1770,890 1920,1080 0,1080" fill="#f8fafc" />
+  <line x1="0" y1="920" x2="1920" y2="920" stroke="#e2e8f0" stroke-width="2" />
+  <line x1="0" y1="960" x2="1920" y2="960" stroke="#e2e8f0" stroke-width="2" />
+  <line x1="0" y1="1000" x2="1920" y2="1000" stroke="#e2e8f0" stroke-width="2" />
+  <line x1="0" y1="1040" x2="1920" y2="1040" stroke="#e2e8f0" stroke-width="2" />
+
+  <!-- Hồ bơi tràn viền (Infinity Pool) phản chiếu bầu trời và ngôi nhà -->
+  <polygon points="560,930 1360,930 1440,1070 480,1070" fill="url(#poolGrad)" opacity="0.88" />
+  <polygon points="580,940 1340,940 1370,980 550,980" fill="#bae6fd" opacity="0.35" />
+
+  <!-- Cây cảnh nghệ thuật & Cây xanh tối giản hai bên -->
+  <ellipse cx="250" cy="850" rx="80" ry="140" fill="#15803d" opacity="0.75" />
+  <ellipse cx="220" cy="810" rx="60" ry="100" fill="#22c55e" opacity="0.8" />
+  <rect x="240" y="880" width="20" height="60" fill="#78350f" />
+
+  <ellipse cx="1680" cy="840" rx="90" ry="150" fill="#15803d" opacity="0.7" />
+  <ellipse cx="1710" cy="800" rx="70" ry="110" fill="#22c55e" opacity="0.75" />
+  <rect x="1670" y="880" width="22" height="60" fill="#78350f" />
+</svg>

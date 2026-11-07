@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thành Viên Gia Đình - Nhà Thông Minh v1</title>
+    <!-- File CSS riêng biệt -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="usersPageMarker" style="display:none;"></div>
+
+    <div class="app-container">
+        <!-- ==================================================================
+             HEADER & THANH ĐIỀU HƯỚNG DẠNG PILLS
+             ================================================================== -->
+        <header class="top-header">
+            <a href="index.html" class="brand-section">
+                <div class="brand-logo">
+                    <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                </div>
+                <div>
+                    <div class="brand-name">Nhà Thông Minh v1</div>
+                    <div class="brand-sub">Quản Lý Thành Viên Gia Đình</div>
+                </div>
+            </a>
+
+            <!-- Navigation Pills -->
+            <nav class="nav-pills">
+                <a href="index.html" class="nav-pill-item">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    <span>Trang Chủ</span>
+                </a>
+                <a href="livingroom.html" class="nav-pill-item">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                    <span>Phòng Khách</span>
+                </a>
+                <a href="environment.html" class="nav-pill-item">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>
+                    </svg>
+                    <span>Nhiệt Độ & Độ Ẩm</span>
+                </a>
+                <a href="users.html" class="nav-pill-item active">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>Thành Viên</span>
+                </a>
+            </nav>
+
+            <div class="header-actions">
+                <div class="clock-widget">
+                    <span id="globalClockText">--:--:--</span>
+                </div>
+
+                <!-- Badge tài khoản người dùng hiện tại -->
+                <div class="user-profile-badge" id="currentUserBadge" onclick="AppCore.openSwitchUserModal()" title="Bấm để chuyển đổi tài khoản người dùng">
+                    <div class="user-avatar" id="headerUserAvatar">A</div>
+                    <div class="user-info-text">
+                        <span class="user-name" id="headerUserName">Nguyễn Văn An</span>
+                        <span class="user-role-tag admin" id="headerUserRole">Admin</span>
+                    </div>
+                </div>
+
+                <div class="status-pill mock" id="globalStatusBadge">
+                    <span class="dot"></span>
+                    <span id="globalStatusText">Mô Phỏng</span>
+                </div>
+
+                <button class="btn-pill" id="themeSwitchBtn" onclick="AppCore.toggleTheme()" title="Bấm để chuyển đổi giao diện: Nền Biệt Thự Kính / Nền Dark Cyber / Nền Sáng">
+                    🏡 Nền Biệt Thự
+                </button>
+
+                <button class="btn-pill firebase-badge" onclick="SmartHomeFirebase.seedDefaultFamilyMembers()" title="Khởi tạo thành viên mẫu lên Firestore">
+                    🔥 Firestore Cloud
+                </button>
+            </div>
+        </header>
+
+        <!-- BANNER CẢNH BÁO NẾU CÓ KHẨN CẤP -->
+        <div class="alert-banner" id="globalAlertBanner">
+            <div class="alert-banner-left">
+                <div class="alert-bell-icon">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 id="globalAlertTitle" style="font-size:0.95rem; font-weight:700; color:#fee2e2;">CẢNH BÁO SỰ CỐ!</h3>
+                    <p id="globalAlertDesc" style="font-size:0.8rem; color:#fca5a5;">Phát hiện rò rỉ khí gas hoặc khẩn cấp.</p>
+                </div>
+            </div>
+            <button class="btn-silence" onclick="AppCore.silenceAlarm()">Tắt Còi</button>
+        </div>
+
+        <!-- ==================================================================
+             THỐNG KÊ THÀNH VIÊN GIA ĐÌNH (METRICS SUMMARY)
+             ================================================================== -->
+        <div class="dashboard-grid">
+            <div class="col-3">
+                <div class="card" style="padding:1.1rem;">
+                    <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Tổng Số Thành Viên</div>
+                    <div style="font-size:2rem; font-weight:800; color:var(--accent-primary); margin-top:4px;" id="countTotalMembers">3</div>
+                    <span style="font-size:0.725rem; color:var(--text-secondary);">Lưu trữ tại Cloud Firestore</span>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="card" style="padding:1.1rem;">
+                    <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Quản Trị Viên (Admin)</div>
+                    <div style="font-size:2rem; font-weight:800; color:#1d4ed8; margin-top:4px;" id="countAdminMembers">1</div>
+                    <span style="font-size:0.725rem; color:var(--text-secondary);">Toàn quyền điều khiển & quản trị</span>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="card" style="padding:1.1rem;">
+                    <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Thành Viên (Users)</div>
+                    <div style="font-size:2rem; font-weight:800; color:var(--text-primary); margin-top:4px;" id="countRegularMembers">2</div>
+                    <span style="font-size:0.725rem; color:var(--text-secondary);">Người dùng gia đình được cấp quyền</span>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="card" style="padding:1.1rem;">
+                    <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Đang Trực Tuyến</div>
+                    <div style="font-size:2rem; font-weight:800; color:var(--accent-green); margin-top:4px;" id="countOnlineMembers">2</div>
+                    <span style="font-size:0.725rem; color:var(--text-secondary);">Thành viên đang truy cập web</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================================================================
+             DANH SÁCH THÀNH VIÊN GIA ĐÌNH (CLOUD FIRESTORE: family_members)
+             ================================================================== -->
+        <div class="card" style="margin-bottom:1.5rem;">
+            <div class="card-header" style="flex-wrap:wrap; gap:10px;">
+                <div class="card-title-group">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="card-title">Danh Sách Người Dùng Trong Gia Đình</h3>
+                        <span class="card-subtitle">Đồng bộ hai chiều với Firebase Cloud Firestore (Collection: <code>family_members</code>)</span>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-action btn-danger" onclick="SmartHomeFirebase.cleanupOldSmarthomeTree()" title="Xóa bỏ vĩnh viễn nhánh 'smarthome' cồng kềnh cũ trên Firebase Realtime DB">
+                        🧹 Xóa Nhánh Smarthome Cũ
+                    </button>
+                    <button class="btn-action" onclick="SmartHomeFirebase.seedDefaultFamilyMembers()" title="Khởi tạo danh sách mẫu nếu Firestore đang trống">
+                        🔥 Khởi Tạo Mẫu
+                    </button>
+                    <button class="btn-action" style="background:var(--accent-primary); color:#ffffff; border-color:var(--accent-primary);" onclick="AppCore.openAddMemberModal()">
+                        + Thêm Thành Viên
+                    </button>
+                </div>
+            </div>
+
+            <!-- Khung danh sách thẻ thành viên gia đình -->
+            <div class="member-grid" id="familyMemberList">
+                <!-- Được render tự động qua JavaScript AppCore.renderUsersPage() -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================================================================
+         MODAL POPUP THÊM THÀNH VIÊN GIA ĐÌNH VÀO CLOUD FIRESTORE
+         ================================================================== -->
+    <div class="modal-overlay" id="addMemberModalOverlay">
+        <div class="modal-card" style="max-width:520px; text-align:left;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+                <h3 style="font-size:1.15rem; font-weight:700; color:var(--text-primary);">Thêm Thành Viên Mới Vào Gia Đình</h3>
+                <span style="font-size:1.5rem; cursor:pointer; color:var(--text-muted);" onclick="AppCore.closeAddMemberModal()">&times;</span>
+            </div>
+
+            <form onsubmit="AppCore.handleAddMemberFormSubmit(event)">
+                <div class="form-group">
+                    <label class="form-label">Họ và tên thành viên *</label>
+                    <input type="text" id="newMemberName" class="form-input" placeholder="Ví dụ: Trần Thị Mai, Nguyễn Hoàng Nam..." required>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div class="form-group">
+                        <label class="form-label">Vai trò trong hệ thống *</label>
+                        <select id="newMemberRole" class="form-select">
+                            <option value="user">Người dùng (User)</option>
+                            <option value="admin">Quản trị viên (Admin)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mối quan hệ gia đình</label>
+                        <input type="text" id="newMemberRelation" class="form-input" placeholder="Bố, Mẹ, Con trai, Con gái, Khách...">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Số điện thoại liên lạc</label>
+                    <input type="text" id="newMemberPhone" class="form-input" placeholder="0912 xxx xxx">
+                </div>
+
+                <div class="form-group" style="background:#f8fafc; padding:0.75rem; border-radius:8px; border:1px solid #e2e8f0;">
+                    <label class="form-label" style="margin-bottom:0.4rem;">Cấp quyền điều khiển an ninh:</label>
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        <label style="display:flex; align-items:center; gap:8px; font-size:0.825rem; cursor:pointer;">
+                            <input type="checkbox" id="newMemberCanDoor" checked>
+                            <span>Cho phép mở khóa cửa chính (Servo 90°)</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; font-size:0.825rem; cursor:pointer;">
+                            <input type="checkbox" id="newMemberCanAlarm">
+                            <span>Cho phép bật/tắt còi báo động khẩn cấp</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:1.5rem;">
+                    <button type="button" class="btn-action" onclick="AppCore.closeAddMemberModal()">Hủy</button>
+                    <button type="submit" class="btn-action" style="background:var(--accent-primary); color:#ffffff; border-color:var(--accent-primary);">
+                        Lưu Lên Cloud Firestore
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================================================================
+         MODAL CHUYỂN ĐỔI NGƯỜI DÙNG NHANH (SWITCH USER)
+         ================================================================== -->
+    <div class="modal-overlay" id="switchUserModalOverlay">
+        <div class="modal-card" style="max-width:440px; text-align:left;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <h3 style="font-size:1.1rem; font-weight:700;">Chuyển Đổi Người Dùng Đang Thao Tác</h3>
+                <span style="font-size:1.4rem; cursor:pointer; color:var(--text-muted);" onclick="AppCore.closeSwitchUserModal()">&times;</span>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">
+                Chọn một thành viên trong gia đình để trải nghiệm phân quyền điều khiển (Admin hoặc User):
+            </p>
+            <div id="quickSwitchUserList" style="display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto;">
+                <!-- Rendered dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        Hệ Thống Nhà Thông Minh v1 &bull; Quản Lý Người Dùng & Thành Viên Gia Đình &bull; Lưu trữ Cloud Firestore
+    </footer>
+
+    <!-- Thư viện Firebase SDK Compat cho trình duyệt -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <!-- File Cấu hình & Đồng bộ Firebase -->
+    <script src="js/firebase-config.js"></script>
+    <!-- File JavaScript Core ứng dụng -->
+    <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng Khách - Nhà Thông Minh v1</title>
+    <!-- File CSS riêng biệt -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="livingRoomPageMarker" style="display:none;"></div>
+
+    <div class="app-container">
+        <!-- ==================================================================
+             HEADER & THANH ĐIỀU HƯỚNG DẠNG PILLS
+             ================================================================== -->
+        <header class="top-header">
+            <a href="index.html" class="brand-section">
+                <div class="brand-logo">
+                    <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                </div>
+                <div>
+                    <div class="brand-name">Nhà Thông Minh v1</div>
+                    <div class="brand-sub">Trung Tâm An Ninh Phòng Khách</div>
+                </div>
+            </a>
+
+            <!-- Navigation Pills -->
+            <nav class="nav-pills">
+                <a href="index.html" class="nav-pill-item">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    <span>Trang Chủ</span>
+                </a>
+                <a href="livingroom.html" class="nav-pill-item active">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                    <span>Phòng Khách</span>
+                </a>
+                <a href="environment.html" class="nav-pill-item">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>
+                    </svg>
+                    <span>Nhiệt Độ & Độ Ẩm</span>
+                </a>
+                <a href="users.html" class="nav-pill-item">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>Thành Viên</span>
+                </a>
+            </nav>
+
+            <div class="header-actions">
+                <div class="clock-widget">
+                    <span id="globalClockText">--:--:--</span>
+                </div>
+
+                <!-- Badge tài khoản người dùng hiện tại -->
+                <div class="user-profile-badge" id="currentUserBadge" onclick="AppCore.openSwitchUserModal()" title="Bấm để chuyển đổi tài khoản người dùng">
+                    <div class="user-avatar" id="headerUserAvatar">A</div>
+                    <div class="user-info-text">
+                        <span class="user-name" id="headerUserName">Nguyễn Văn An</span>
+                        <span class="user-role-tag admin" id="headerUserRole">Admin</span>
+                    </div>
+                </div>
+
+                <div class="status-pill mock" id="globalStatusBadge">
+                    <span class="dot"></span>
+                    <span id="globalStatusText">Mô Phỏng</span>
+                </div>
+                <button class="btn-pill" id="globalMockToggle" onclick="AppCore.toggleMockMode()">
+                    Giả Lập: BẬT
+                </button>
+                <button class="btn-pill" id="themeSwitchBtn" onclick="AppCore.toggleTheme()" title="Bấm để chuyển đổi giao diện: Nền Biệt Thự Kính / Nền Dark Cyber / Nền Sáng">
+                    🏡 Nền Biệt Thự
+                </button>
+                <button class="btn-pill firebase-badge" onclick="SmartHomeFirebase.seedAllFields()" title="Bấm để đồng bộ/tạo các trường dữ liệu mẫu lên Firebase">
+                    🔥 Firebase: Đã Kết Nối
+                </button>
+            </div>
+        </header>
+
+        <!-- BANNER CẢNH BÁO NẾU CÓ KHẨN CẤP -->
+        <div class="alert-banner" id="globalAlertBanner">
+            <div class="alert-banner-left">
+                <div class="alert-bell-icon">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 id="globalAlertTitle" style="font-size:0.95rem; font-weight:700; color:#fee2e2;">CẢNH BÁO SỰ CỐ!</h3>
+                    <p id="globalAlertDesc" style="font-size:0.8rem; color:#fca5a5;">Phát hiện rò rỉ khí gas hoặc khẩn cấp.</p>
+                </div>
+            </div>
+            <button class="btn-silence" onclick="AppCore.silenceAlarm()">Tắt Còi</button>
+        </div>
+
+        <!-- ==================================================================
+             BỐ CỤC CHI TIẾT PHÒNG KHÁCH (LIVING ROOM DASHBOARD)
+             ================================================================== -->
+        <div class="dashboard-grid">
+
+            <!-- THẺ 1 (CỘT 6): KHÓA CỬA SERVO 90° TRUNG TÂM -->
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon" id="lrDoorIcon">
+                                <svg viewBox="0 0 24 24" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Cửa Chính Điện Tử (Servo Motor)</h3>
+                                <span class="card-subtitle">Cơ cấu đóng mở góc quay 0° - 90°</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hiển thị Trực Quan Góc Quay Servo -->
+                    <div class="card-widget-item" style="text-align:center; padding:1.5rem 1rem;">
+                        <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">TRẠNG THÁI KHÓA CHỐT CỬA:</div>
+                        <div id="lrDoorText" style="font-size:1.6rem; font-weight:800; color:var(--text-primary); font-family:monospace; margin-bottom:12px;">
+                            Đang Đóng (Khóa Cửa 0°)
+                        </div>
+                        
+                        <div style="display:flex; justify-content:center; gap:1.5rem; margin-bottom:1.5rem;">
+                            <div style="background:#f1f5f9; padding:0.6rem 1.2rem; border-radius:var(--radius-md); border:1px solid var(--card-border);">
+                                <span style="font-size:0.7rem; color:var(--text-muted);">Góc Servo:</span>
+                                <div style="font-size:1.1rem; font-weight:700; color:var(--accent-primary);">90° Mở / 0° Đóng</div>
+                            </div>
+                            <div style="background:#f1f5f9; padding:0.6rem 1.2rem; border-radius:var(--radius-md); border:1px solid var(--card-border);">
+                                <span style="font-size:0.7rem; color:var(--text-muted);">Giao thức:</span>
+                                <div style="font-size:1.1rem; font-weight:700; color:var(--accent-green);">PWM GPIO 18</div>
+                            </div>
+                        </div>
+
+                        <button class="btn-action" id="lrBtnDoor" style="font-size:0.95rem; padding:0.8rem 2rem; justify-content:center;" onclick="AppCore.sendCommand('door', AppCore.state.devices.doorLocked ? 'unlock' : 'lock')">
+                            Mở Khóa Cửa (Servo 90°)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- THẺ 2 (CỘT 6): CẢM BIẾN KHÍ GAS MQ2 PHÒNG KHÁCH -->
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon" style="color:var(--accent-green);">
+                                <svg viewBox="0 0 24 24" stroke-width="2">
+                                    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Cảm Biến Khí Gas & Khói MQ2</h3>
+                                <span class="card-subtitle">Giám sát rò rỉ tại phòng khách</span>
+                            </div>
+                        </div>
+                        <div class="status-pill" id="lrGasBadge">CHỜ CẢM BIẾN</div>
+                    </div>
+
+                    <!-- Donut đo nồng độ Gas MQ2 -->
+                    <div class="donut-gauge-box">
+                        <div class="donut-svg-wrap">
+                            <svg width="110" height="110">
+                                <circle class="donut-bg-ring" cx="55" cy="55" r="40" stroke-width="10" fill="none"></circle>
+                                <circle id="lrGasDonut" class="donut-val-ring" cx="55" cy="55" r="40" stroke-width="10" fill="none" style="stroke-dasharray: 251.3; stroke-dashoffset: 251.3;"></circle>
+                            </svg>
+                            <div class="donut-inner-text">
+                                <div class="donut-num" id="lrGasPpm">--</div>
+                                <div class="donut-unit">PPM</div>
+                            </div>
+                        </div>
+
+                        <div class="donut-info-list">
+                            <div class="donut-info-row">
+                                <span class="label">Nồng độ đo được:</span>
+                                <span class="val"><span id="lrGasPpmText">--</span> PPM</span>
+                            </div>
+                            <div class="donut-info-row">
+                                <span class="label">Ngưỡng cảnh báo:</span>
+                                <span class="val">300 PPM</span>
+                            </div>
+                            <div class="donut-info-row">
+                                <span class="label">Ngưỡng nguy hiểm:</span>
+                                <span class="val" style="color:var(--accent-red);">400 PPM</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- THẺ 3 (CỘT 6): CẢM BIẾN CHUYỂN ĐỘNG PIR & CHIẾU SÁNG -->
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon" id="lrIconLight">
+                                <svg viewBox="0 0 24 24" stroke-width="2">
+                                    <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-7 7c0 2.5 1.5 4.5 3 6h8c1.5-1.5 3-3.5 3-6a7 7 0 0 0-7-7z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Chiếu Sáng Thông Minh</h3>
+                                <span class="card-subtitle">Rơ-le đèn phòng khách</span>
+                            </div>
+                        </div>
+                        <label class="cyber-switch">
+                            <input type="checkbox" id="lrSwitchLight" onchange="AppCore.sendCommand('light_living', this.checked ? 'on' : 'off')">
+                            <span class="cyber-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Trạng thái Cảm biến PIR -->
+                    <div class="card-widget-item">
+                        <div style="display:flex; align-items:center; justify-content:space-between;">
+                            <div>
+                                <div style="font-size:0.875rem; font-weight:600;">Cảm Biến Phát Hiện Người (PIR)</div>
+                                <div style="font-size:0.75rem; color:var(--text-muted);">Tự động quét hồng ngoại thụ động</div>
+                            </div>
+                            <div class="status-pill" id="lrPirBadge">
+                                <span class="dot"></span>
+                                <span id="lrPirText">Chờ cảm biến PIR...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nút kích hoạt thử nghiệm PIR -->
+                    <div style="margin-top:0.75rem;">
+                        <button class="btn-action" style="width:100%; justify-content:center;" onclick="AppCore.state.sensors.pirMotion = true; AppCore.saveStateToStorage(); AppCore.renderCurrentPage(); setTimeout(() => { AppCore.state.sensors.pirMotion = false; AppCore.renderCurrentPage(); }, 5000);">
+                            🚶 Mô Phỏng Người Đi Vào Phòng Khách
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- THẺ 4 (CỘT 6): LỊCH SỬ RA VÀO & AN NINH -->
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon">
+                                <svg viewBox="0 0 24 24" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Nhật Ký An Ninh Phòng Khách</h3>
+                                <span class="card-subtitle">Lưu vết mở cửa và phát hiện chuyển động</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="globalLogBox" style="height:140px; overflow-y:auto; font-family:monospace; font-size:0.775rem; color:var(--text-secondary); display:flex; flex-direction:column; gap:6px;">
+                        <div>[Hôm nay 19:10:00] Khóa cửa Servo 90° kích hoạt thành công.</div>
+                        <div>[Hôm nay 19:12:15] Cảm biến PIR: Không phát hiện chuyển động lạ.</div>
+                        <div>[Hôm nay 19:15:30] Cảm biến Gas MQ2: Chỉ số an toàn 120 PPM.</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal chuyển đổi tài khoản người dùng nhanh -->
+    <div class="modal-overlay" id="switchUserModalOverlay">
+        <div class="modal-card" style="max-width:440px; text-align:left;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <h3 style="font-size:1.1rem; font-weight:700;">Chuyển Đổi Người Dùng Đang Thao Tác</h3>
+                <span style="font-size:1.4rem; cursor:pointer; color:var(--text-muted);" onclick="AppCore.closeSwitchUserModal()">&times;</span>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">
+                Chọn một thành viên trong gia đình để trải nghiệm phân quyền điều khiển:
+            </p>
+            <div id="quickSwitchUserList" style="display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto;">
+            </div>
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        Hệ Thống Nhà Thông Minh v1 &bull; Trung Tâm Phòng Khách &bull; Đồng bộ Firebase: iot-smarthome2-dbf39
+    </footer>
+
+    <!-- Thư viện Firebase SDK Compat cho trình duyệt -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <!-- File Cấu hình & Đồng bộ Firebase -->
+    <script src="js/firebase-config.js"></script>
+    <!-- File JavaScript Core ứng dụng -->
+    <script src="js/app.js"></script>
+</body>
+</html>

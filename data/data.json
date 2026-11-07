@@ -1,0 +1,111 @@
+{
+  "system_info": {
+    "name": "Nhà Thông Minh v1",
+    "version": "1.2.0",
+    "architecture": "Cyber Dark Modern IoT Dashboard",
+    "hardware_target": "ESP32 / ESP8266 / LittleFS",
+    "cloud_sync": "Firebase Realtime Database Ready"
+  },
+  "network_config": {
+    "default_host": "192.168.1.50",
+    "polling_interval_ms": 2000,
+    "mock_mode": false
+  },
+  "sensors": {
+    "dht22": {
+      "temperature": null,
+      "humidity": null,
+      "temp_min_today": null,
+      "temp_max_today": null,
+      "comfort_status": "Chờ kết nối cảm biến...",
+      "hourly_history": []
+    },
+    "gas_living": {
+      "ppm": null,
+      "status": "waiting",
+      "status_label": "Chờ cảm biến MQ2..."
+    },
+    "gas_kitchen": {
+      "ppm": null,
+      "status": "waiting",
+      "status_label": "Chờ cảm biến MQ2..."
+    },
+    "pir_living": {
+      "motion_detected": null,
+      "last_detected": "Chưa có dữ liệu"
+    },
+    "rain_weather": {
+      "is_raining": null,
+      "status_label": "Chờ cảm biến mưa...",
+      "rain_intensity_percent": null
+    }
+  },
+  "devices": {
+    "door_servo": {
+      "id": "door",
+      "locked": true,
+      "angle": 0,
+      "status_label": "Đang Đóng (Khóa 0°)"
+    },
+    "light_living": {
+      "id": "light_living",
+      "state": false
+    },
+    "light_kitchen": {
+      "id": "light_kitchen",
+      "state": false
+    },
+    "fan_kitchen": {
+      "id": "fan_kitchen",
+      "state": false
+    },
+    "light_bedroom": {
+      "id": "light_bedroom",
+      "state": false
+    },
+    "emergency_alarm": {
+      "id": "alarm",
+      "state": false
+    },
+    "drying_rack": {
+      "id": "rack",
+      "mode": "auto",
+      "position": "extended",
+      "position_label": "Đang vươn ra (Phơi)"
+    }
+  },
+  "thresholds": {
+    "gas_warning_ppm": 300,
+    "gas_danger_ppm": 450,
+    "temp_warning_c": 35.0,
+    "hum_warning_percent": 85
+  },
+  "firebase_config": {
+    "enabled": true,
+    "apiKey": "AIzaSyCxKZlIkrIsEtH4MOScf79cYeVrtHVyWvQ",
+    "authDomain": "iot-smarthome2-dbf39.firebaseapp.com",
+    "databaseURL": "https://iot-smarthome2-dbf39-default-rtdb.firebaseio.com",
+    "projectId": "iot-smarthome2-dbf39",
+    "storageBucket": "iot-smarthome2-dbf39.firebasestorage.app",
+    "messagingSenderId": "1019090397705",
+    "appId": "1:1019090397705:web:93e8263094690d469d66d8",
+    "measurementId": "G-V0TXSS2KH2"
+  },
+  "firebase_fields_mapping": {
+    "nhiet_do": "Nhiệt độ phòng (°C)",
+    "do_am": "Độ ẩm phòng (%)",
+    "den_phong_khach": "Trạng thái đèn phòng khách (true/false)",
+    "den_phong_bep": "Trạng thái đèn phòng bếp (true/false)",
+    "quat_bep": "Trạng thái quạt hút khói bếp (true/false)",
+    "den_phong_ngu": "Trạng thái đèn phòng ngủ (true/false)",
+    "cua_chinh": "Góc quay servo cửa chính (0 độ: Đóng/Khóa, 90 độ: Mở)",
+    "gas_phong_khach": "Nồng độ khí gas MQ2 phòng khách (PPM)",
+    "gas_phong_bep": "Nồng độ khí gas MQ2 phòng bếp (PPM)",
+    "pir_phong_khach": "Cảm biến PIR phát hiện người (true/false)",
+    "cam_bien_mua": "Cảm biến mưa (true/false)",
+    "gian_phoi_che_do": "Chế độ giàn phơi ('auto'/'manual')",
+    "gian_phoi_vi_tri": "Vị trí giàn phơi ('extended'/'retracted')",
+    "coi_bao_dong": "Còi báo động khẩn cấp (true/false)",
+    "nguoi_dieu_khien": "Ghi nhận User nào vừa điều khiển chức năng gì (ten, vai_tro, thiet_bi, thao_tac, thoi_gian)"
+  }
+}
