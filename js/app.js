@@ -491,9 +491,11 @@ const AppCore = {
         const gasVal = (this.state.sensors.gasKitchen !== null && this.state.sensors.gasKitchen !== undefined) 
             ? this.state.sensors.gasKitchen 
             : this.state.sensors.gasLiving;
-        const isGasDanger = (gasVal !== null && gasVal !== undefined && gasVal > this.state.thresholds.gasDangerPpm) || Boolean(this.state.sensors.gasAlarm);
+        const hasGas = (gasVal !== null && gasVal !== undefined);
+        const isGasDanger = hasGas && (gasVal > this.state.thresholds.gasDangerPpm || Boolean(this.state.sensors.gasAlarm));
         const isFireDanger = Boolean(this.state.sensors.fireAlarm);
-        const isDanger = isGasDanger || isFireDanger;
+        const isAlarmActive = Boolean(this.state.devices.alarmActive);
+        const isDanger = isGasDanger || isFireDanger || isAlarmActive;
 
         const banner = document.getElementById('globalAlertBanner');
         const bannerTitle = document.getElementById('globalAlertTitle');
@@ -504,21 +506,20 @@ const AppCore = {
                 banner.classList.add('active');
                 if (isFireDanger && isGasDanger) {
                     if (bannerTitle) bannerTitle.innerText = "🚨 KHẨN CẤP: PHÁT HIỆN LỬA VÀ RÒ RỈ GAS TẠI PHÒNG BẾP!";
-                    if (bannerDesc) bannerDesc.innerText = `Cảm biến lửa (BaoDongLua = true) và nồng độ khí gas nguy hiểm (${gasVal} PPM)!`;
+                    if (bannerDesc) bannerDesc.innerText = `Cảm biến lửa (BaoDongLua = true) và nồng độ khí gas nguy hiểm (${gasVal} PPM)! Còi báo động đang hú!`;
                 } else if (isFireDanger) {
-                    if (bannerTitle) bannerTitle.innerText = "🔥 CẢNH BÁO KHẨN CẤP: PHÁT HIỆN NGỌN LỬA PHÒNG BẾP!";
-                    if (bannerDesc) bannerDesc.innerText = "Cảm biến ngọn lửa phòng bếp (BaoDongLua) đang kích hoạt cảnh báo nguy cơ cháy nổ!";
-                } else {
-                    if (bannerTitle) bannerTitle.innerText = "CẢNH BÁO RÒ RỈ KHÍ GAS NGUY HIỂM!";
-                    if (bannerDesc) bannerDesc.innerText = `Phát hiện nồng độ khí gas vượt ngưỡng an toàn (>${this.state.thresholds.gasDangerPpm} PPM): ${gasVal} PPM.`;
+                    if (bannerTitle) bannerTitle.innerText = "🔥 CẢNH BÁO KHẨN CẤP: PHÁT HIỆN NGỌN LỬA / BÁO CHÁY PHÒNG BẾP!";
+                    if (bannerDesc) bannerDesc.innerText = "Cảm biến ngọn lửa (BaoDongLua = true) kích hoạt báo cháy! Còi báo động đang hú cảnh báo!";
+                } else if (isGasDanger) {
+                    if (bannerTitle) bannerTitle.innerText = "⚠️ CẢNH BÁO: NỒNG ĐỘ KHÍ GAS VƯỢT NGƯỠNG AN TOÀN!";
+                    if (bannerDesc) bannerDesc.innerText = `Phát hiện nồng độ khí gas cao (${gasVal} PPM > 2000 PPM)! Còi báo động đang hú cảnh báo!`;
+                } else if (isAlarmActive) {
+                    if (bannerTitle) bannerTitle.innerText = "🚨 BÁO ĐỘNG KHẨN CẤP ĐANG KÍCH HOẠT!";
+                    if (bannerDesc) bannerDesc.innerText = "Hệ thống còi báo động an ninh khẩn cấp đang được kích hoạt từ phòng ngủ!";
                 }
 
-                // Âm thanh cảnh báo còi hú khi mức khí gas vượt qua 2000 PPM
-                if (hasGas && gasVal > this.state.thresholds.gasDangerPpm) {
-                    this.startSiren();
-                } else {
-                    this.stopSiren();
-                }
+                // Phát âm thanh còi hú Web Audio khi có: BÁO CHÁY, KHÍ GAS > 2000 hoặc BẬT CÒI KHẨN CẤP
+                this.startSiren();
             } else if (!isDanger) {
                 banner.classList.remove('active');
                 this.state.alertDismissed = false;
@@ -823,10 +824,58 @@ const AppCore = {
             }
         }
 
-        // Nút khẩn cấp
+        // Còi báo động khẩn cấp (Phòng ngủ & Toàn nhà)
+        const isAlarmOn = Boolean(this.state.devices.alarmActive);
         const btnAlarm = document.getElementById('ovBtnAlarm');
+        const badgeAlarm = document.getElementById('ovAlarmBadge');
+        const alarmText = document.getElementById('ovAlarmStatusText');
+        const alarmBox = document.getElementById('ovAlarmBox');
+        const alarmIcon = document.getElementById('ovAlarmIcon');
+        const hasDangerNow = isAlarmOn || isGasDangerOverall || Boolean(this.state.sensors.fireAlarm);
+
+        if (badgeAlarm) {
+            badgeAlarm.innerText = hasDangerNow ? "🚨 BÁO ĐỘNG!" : "An Toàn";
+            badgeAlarm.className = hasDangerNow ? "status-pill offline" : "status-pill online";
+        }
+        if (alarmText) {
+            if (isAlarmOn) {
+                alarmText.innerText = "🚨 ĐANG HÚ CÒI BÁO ĐỘNG (BẬT THỦ CÔNG)";
+                alarmText.style.color = "var(--accent-red)";
+            } else if (Boolean(this.state.sensors.fireAlarm)) {
+                alarmText.innerText = "🔥 ĐANG HÚ CÒI (PHÁT HIỆN LỬA - BÁO CHÁY!)";
+                alarmText.style.color = "var(--accent-red)";
+            } else if (isGasDangerOverall) {
+                alarmText.innerText = "⚠️ ĐANG HÚ CÒI (KHÍ GAS VƯỢT NGƯỠNG!)";
+                alarmText.style.color = "var(--accent-red)";
+            } else {
+                alarmText.innerText = "Còi Báo Động: Sẵn Sàng (Tự Hú Khi Có Cháy/Gas)";
+                alarmText.style.color = "var(--accent-green)";
+            }
+        }
         if (btnAlarm) {
-            btnAlarm.style.display = 'none';
+            btnAlarm.style.display = 'flex';
+            if (isAlarmOn) {
+                btnAlarm.innerText = "🔕 TẮT CÒI BÁO ĐỘNG KHẨN CẤP";
+                btnAlarm.className = "btn-action btn-danger";
+                btnAlarm.style.background = "var(--accent-red)";
+                btnAlarm.style.color = "#ffffff";
+                btnAlarm.style.borderColor = "var(--accent-red)";
+                btnAlarm.style.boxShadow = "0 0 0 2px rgba(239, 68, 68, 0.4)";
+            } else {
+                btnAlarm.innerText = "🚨 BẬT CÒI BÁO ĐỘNG KHẨN CẤP";
+                btnAlarm.className = "btn-action";
+                btnAlarm.style.background = "rgba(239, 68, 68, 0.08)";
+                btnAlarm.style.color = "var(--accent-red)";
+                btnAlarm.style.borderColor = "rgba(239, 68, 68, 0.35)";
+                btnAlarm.style.boxShadow = "none";
+            }
+        }
+        if (alarmBox) {
+            alarmBox.style.background = hasDangerNow ? "rgba(239, 68, 68, 0.08)" : "var(--card-inner)";
+            alarmBox.style.borderColor = hasDangerNow ? "rgba(239, 68, 68, 0.4)" : "var(--card-border)";
+        }
+        if (alarmIcon) {
+            alarmIcon.innerText = hasDangerNow ? "🚨" : "🔔";
         }
 
         // Render mục Người Điều Khiển & Lịch Sử Thao Tác Cloud Firestore
@@ -950,6 +999,23 @@ const AppCore = {
         this.sendCommand('rack', isExtend ? 'extend' : 'retract', { angle: angle });
         this.showToast(isExtend ? `☀️ Động cơ Servo: Đang đưa giàn ra (${angle}°) đón nắng!` : `🏠 Động cơ Servo: Đang kéo giàn vào (${angle}°) nhà an toàn!`, 'info');
         this.renderOverviewPage();
+    },
+
+    /**
+     * Bật / Tắt còi báo động khẩn cấp (Web Audio + Firebase Buzzer)
+     */
+    toggleAlarm: function() {
+        const nextState = !this.state.devices.alarmActive;
+        this.sendCommand('alarm', nextState ? 'on' : 'off');
+        if (nextState) {
+            this.state.alertDismissed = false;
+            this.startSiren();
+            this.showToast("🚨 ĐÃ KÍCH HOẠT CÒI BÁO ĐỘNG KHẨN CẤP!", "error");
+        } else {
+            this.stopSiren();
+            this.showToast("🔕 Đã tắt còi báo động khẩn cấp!", "info");
+        }
+        this.renderCurrentPage();
     },
 
     /**

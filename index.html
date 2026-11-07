@@ -114,7 +114,7 @@
                     <p id="globalAlertDesc" style="font-size:0.8rem; color:#fca5a5;">Phát hiện nồng độ khí gas nguy hiểm vượt ngưỡng an toàn.</p>
                 </div>
             </div>
-            <button class="btn-silence" onclick="AppCore.dismissAlert()">Đóng Cảnh Báo</button>
+            <button class="btn-silence" onclick="AppCore.dismissAlert()">🔕 Tắt Còi / Đóng Cảnh Báo</button>
         </div>
 
         <!-- ==================================================================
@@ -565,9 +565,9 @@
                 </div>
             </div>
 
-            <!-- HÀNG 3 - CỘT 3: PHÒNG NGỦ & BÁO ĐỘNG KHẨN CẤP -->
+            <!-- HÀNG 3 - CỘT 3: PHÒNG NGỦ & CÒI BÁO ĐỘNG KHẨN CẤP -->
             <div class="col-4">
-                <div class="card">
+                <div class="card" style="height:100%; display:flex; flex-direction:column;">
                     <div class="card-header">
                         <div class="card-title-group">
                             <div class="card-icon" style="color:var(--accent-indigo);">
@@ -576,10 +576,11 @@
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="card-title">Phòng Ngủ</h3>
-                                <span class="card-subtitle">Chiếu sáng (DenNgu) & An toàn</span>
+                                <h3 class="card-title">Phòng Ngủ & Còi Báo Động</h3>
+                                <span class="card-subtitle">Chiếu sáng (DenNgu) & Còi khẩn cấp</span>
                             </div>
                         </div>
+                        <span id="ovAlarmBadge" class="status-pill online" style="font-size:0.75rem; padding:0.25rem 0.65rem;">An Toàn</span>
                     </div>
 
                     <!-- Đèn phòng ngủ -->
@@ -596,15 +597,24 @@
                         </div>
                     </div>
 
-                    <!-- Chế độ cảnh báo an toàn hiển thị -->
-                    <div class="card-widget-item" style="margin-top:auto;">
-                        <div class="control-row">
-                            <div>
-                                <div style="font-size:0.8rem; font-weight:700;">Chế Độ Cảnh Báo</div>
-                                <div class="control-desc" style="font-size:0.72rem;">Chỉ hiển thị thị giác (Không hú còi)</div>
+                    <!-- HỆ THỐNG CÒI BÁO ĐỘNG KHẨN CẤP (WEB AUDIO & PHẦN CỨNG) -->
+                    <div class="card-widget-item" id="ovAlarmBox" style="margin-top:auto; border:1px solid var(--card-border); transition:all 0.3s ease;">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                            <div id="ovAlarmIcon" style="font-size:1.5rem; line-height:1;">🔔</div>
+                            <div style="flex:1;">
+                                <div id="ovAlarmStatusText" style="font-size:0.82rem; font-weight:800; color:var(--accent-green);">
+                                    Còi Báo Động: Sẵn Sàng (Tự Hú Khi Có Cháy/Gas)
+                                </div>
+                                <div style="font-size:0.68rem; color:var(--text-muted); margin-top:2px;">
+                                    Tự động phát còi Web Audio khi Cháy hoặc Gas > 2000
+                                </div>
                             </div>
-                            <span class="status-pill online" style="font-size:0.7rem; padding:2px 7px;">Thị Giác</span>
                         </div>
+
+                        <!-- Nút bật/tắt còi khẩn cấp -->
+                        <button type="button" class="btn-action" id="ovBtnAlarm" style="width:100%; justify-content:center; font-weight:700; padding:0.6rem; border-radius:10px; font-size:0.82rem; transition:all 0.25s;" onclick="AppCore.toggleAlarm()">
+                            🚨 BẬT CÒI BÁO ĐỘNG KHẨN CẤP
+                        </button>
                     </div>
                 </div>
             </div>
@@ -743,8 +753,8 @@
                             <button class="btn-action" style="font-size:0.75rem; padding:0.4rem;" onclick="AppCore.state.sensors.fireAlarm = !AppCore.state.sensors.fireAlarm; AppCore.saveStateToStorage(); AppCore.renderCurrentPage();">
                                 🔥 Giả Lập Lửa (BaoDongLua)
                             </button>
-                            <button class="btn-action" style="font-size:0.75rem; padding:0.4rem;" onclick="AppCore.state.sensors.isRaining = !AppCore.state.sensors.isRaining; AppCore.saveStateToStorage(); AppCore.renderCurrentPage();">
-                                🌧️ Đổi Mưa / Nắng
+                            <button class="btn-action" style="font-size:0.75rem; padding:0.4rem;" onclick="AppCore.toggleAlarm();">
+                                🚨 Đổi Còi Báo Động (Alarm)
                             </button>
                             <button class="btn-action" style="font-size:0.75rem; padding:0.4rem;" onclick="AppCore.state.sensors.pirMotion = true; AppCore.saveStateToStorage(); AppCore.renderCurrentPage(); setTimeout(() => { AppCore.state.sensors.pirMotion = false; AppCore.renderCurrentPage(); }, 5000);">
                                 🚶 Cảm Biến PIR Có Người

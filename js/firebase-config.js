@@ -392,6 +392,12 @@ const SmartHomeFirebase = {
                 updates['NhaThongMinhV1/DieuKhien/CheDoPIR'] = (action === 'on' || action === true);
                 break;
             }
+            case 'alarm': {
+                const isAlarm = (action === 'on' || action === true);
+                updates['NhaThongMinhV1/DieuKhien/CoiBaoDong'] = isAlarm;
+                updates['NhaThongMinhV1/DieuKhien/BaoDong'] = isAlarm;
+                break;
+            }
             case 'rack': {
                 const isExtend = (action === 'extend' || action === 'ra' || action === true || action === 90 || action === 180);
                 const angle = (extra && typeof extra.angle === 'number') ? extra.angle : (isExtend ? 90 : 0);
