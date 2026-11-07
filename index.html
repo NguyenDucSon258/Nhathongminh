@@ -90,14 +90,6 @@
                     Giả Lập: BẬT
                 </button>
 
-                <button class="btn-pill" id="themeSwitchBtn" onclick="AppCore.toggleTheme()" title="Bấm để chuyển đổi giao diện">
-                    🏡 Nền Biệt Thự
-                </button>
-
-                <button class="btn-pill" style="background:var(--accent-primary); color:#ffffff; border-color:var(--accent-primary); font-weight:700;" onclick="AppCore.openAddRoomModal()" title="Bấm để tạo thêm phòng/node cảm biến mới không cần sửa code">
-                    + Thêm Phòng / Tạo Node
-                </button>
-
                 <button class="btn-pill" style="background:#fee2e2; color:#b91c1c; border-color:#fca5a5;" onclick="SmartHomeFirebase.cleanupOldSmarthomeTree()" title="Bấm để xóa sạch nhánh 'smarthome' cũ trên Firebase Realtime DB">
                     🧹 Xóa Nhánh Cũ
                 </button>
@@ -523,29 +515,6 @@
         </div>
 
         <!-- ==================================================================
-             KHU VỰC CÁC PHÒNG & NODE THÔNG MINH MỞ RỘNG (TẠO ĐỘNG KHÔNG CẦN SỬA CODE)
-             ================================================================== -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin: 2rem 0 1.25rem; flex-wrap:wrap; gap:12px; padding-top:1.5rem; border-top:1px solid rgba(226, 232, 240, 0.7);">
-            <div>
-                <h2 style="font-size:1.35rem; font-weight:800; color:var(--text-primary); display:flex; align-items:center; gap:10px;">
-                    <span>🏡 Các Phòng & Node Mở Rộng</span>
-                    <span class="status-pill online" id="customRoomsCountBadge" style="font-size:0.75rem;">0 Phòng Mới</span>
-                </h2>
-                <p style="font-size:0.8rem; color:var(--text-muted); margin-top:3px;">
-                    Tạo phòng mới tức thì chỉ với 1 click! Tự động hiển thị cảm biến & đồng bộ điều khiển phần cứng ESP32 qua Firebase mà không cần sửa code web.
-                </p>
-            </div>
-            <button class="btn-action" style="background:var(--accent-primary); color:#ffffff; font-weight:700; border-color:var(--accent-primary); padding:0.6rem 1.4rem; font-size:0.9rem; box-shadow:0 4px 15px rgba(37,99,235,0.35);" onclick="AppCore.openAddRoomModal()">
-                + Thêm Phòng / Tạo Node Mới
-            </button>
-        </div>
-
-        <!-- Lưới hiển thị các phòng động được tạo -->
-        <div class="dashboard-grid" id="customRoomsGrid">
-            <!-- Được render tự động qua JavaScript AppCore.renderCustomRooms() -->
-        </div>
-
-        <!-- ==================================================================
              BẢNG CÔNG CỤ TEST GIẢ LẬP NHANH & NHẬT KÝ SỰ KIỆN
              ================================================================== -->
         <div class="dashboard-grid" style="margin-top:1.5rem;">
@@ -594,137 +563,6 @@
                 Chọn một thành viên trong gia đình để trải nghiệm phân quyền điều khiển:
             </p>
             <div id="quickSwitchUserList" style="display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto;">
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Thêm Phòng / Tạo Node Phần Cứng Mới (Tạo động không cần sửa code) -->
-    <div class="modal-overlay" id="addRoomModalOverlay">
-        <div class="modal-card" style="max-width:540px; text-align:left;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div style="width:40px; height:40px; border-radius:12px; background:var(--accent-primary-light); color:var(--accent-primary); display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
-                        🏡
-                    </div>
-                    <div>
-                        <h3 style="font-size:1.2rem; font-weight:800; color:var(--text-primary);">Tạo Phòng / Node Mới</h3>
-                        <p style="font-size:0.75rem; color:var(--text-muted);">Không sửa code web - Tự động liên kết phần cứng ESP32</p>
-                    </div>
-                </div>
-                <span style="font-size:1.5rem; cursor:pointer; color:var(--text-muted);" onclick="AppCore.closeAddRoomModal()">&times;</span>
-            </div>
-
-            <form onsubmit="AppCore.handleCreateRoomSubmit(event)">
-                <div class="form-group" style="margin-bottom:1rem;">
-                    <label class="form-label">Tên Phòng / Khu Vực *</label>
-                    <input type="text" id="newRoomName" class="form-input" placeholder="Ví dụ: Phòng Ngủ 2, Phòng Làm Việc, Sân Thượng..." required oninput="AppCore.autoGenerateNodeId(this.value)">
-                </div>
-
-                <div class="form-group" style="margin-bottom:1rem;">
-                    <label class="form-label">Mã Node Phần Cứng (Hardware Node ID) *</label>
-                    <input type="text" id="newRoomNodeId" class="form-input" placeholder="Ví dụ: phong_ngu_2, tang_2, node_esp32_1..." required pattern="[a-zA-Z0-9_\-]+" title="Chỉ dùng chữ cái không dấu, số, dấu gạch dưới" oninput="document.getElementById('nodeIdPreview').innerText = this.value || 'node_id'">
-                    <span style="font-size:0.72rem; color:var(--text-muted); margin-top:3px; display:block;">
-                        Phần cứng ESP32 sẽ gửi/nhận dữ liệu tại đường dẫn: <code>/nodes/<span id="nodeIdPreview" style="color:var(--accent-primary); font-weight:700;">node_id</span>/</code>
-                    </span>
-                </div>
-
-                <div class="form-group" style="margin-bottom:1rem;">
-                    <label class="form-label">Biểu tượng phòng (Icon)</label>
-                    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;" id="roomIconPicker">
-                        <label class="icon-radio-label"><input type="radio" name="roomIcon" value="🛏️" checked><span>🛏️ Phòng Ngủ</span></label>
-                        <label class="icon-radio-label"><input type="radio" name="roomIcon" value="💼"><span>💼 Làm Việc</span></label>
-                        <label class="icon-radio-label"><input type="radio" name="roomIcon" value="🌿"><span>🌿 Sân Thượng</span></label>
-                        <label class="icon-radio-label"><input type="radio" name="roomIcon" value="🚿"><span>🚿 Phòng Tắm</span></label>
-                        <label class="icon-radio-label"><input type="radio" name="roomIcon" value="🍽️"><span>🍽️ Phòng Ăn</span></label>
-                        <label class="icon-radio-label"><input type="radio" name="roomIcon" value="🚗"><span>🚗 Gara</span></label>
-                        <label class="icon-radio-label"><input type="radio" name="roomIcon" value="📦"><span>📦 Nhà Kho</span></label>
-                        <label class="icon-radio-label"><input type="radio" name="roomIcon" value="⚡"><span>⚡ Thiết Bị</span></label>
-                    </div>
-                </div>
-
-                <div class="form-group" style="margin-bottom:1.25rem;">
-                    <label class="form-label">Chọn các cảm biến & thiết bị có trong phòng này:</label>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px;">
-                        <label class="feature-checkbox-label">
-                            <input type="checkbox" id="checkDht" checked>
-                            <div>
-                                <strong>🌡️ Nhiệt độ & Độ ẩm</strong>
-                                <span style="display:block; font-size:0.7rem; color:var(--text-muted);">Cảm biến DHT11 / DHT22</span>
-                            </div>
-                        </label>
-                        <label class="feature-checkbox-label">
-                            <input type="checkbox" id="checkGas" checked>
-                            <div>
-                                <strong>⚠️ Khí Gas & Khói</strong>
-                                <span style="display:block; font-size:0.7rem; color:var(--text-muted);">Cảm biến MQ2 (PPM)</span>
-                            </div>
-                        </label>
-                        <label class="feature-checkbox-label">
-                            <input type="checkbox" id="checkPir">
-                            <div>
-                                <strong>🚶 Cảm biến Chuyển động</strong>
-                                <span style="display:block; font-size:0.7rem; color:var(--text-muted);">Phát hiện người PIR</span>
-                            </div>
-                        </label>
-                        <label class="feature-checkbox-label">
-                            <input type="checkbox" id="checkLight" checked>
-                            <div>
-                                <strong>💡 Đèn Chiếu Sáng</strong>
-                                <span style="display:block; font-size:0.7rem; color:var(--text-muted);">Công tắc Rơ-le (Relay)</span>
-                            </div>
-                        </label>
-                        <label class="feature-checkbox-label">
-                            <input type="checkbox" id="checkFan">
-                            <div>
-                                <strong>🌀 Quạt / Thông Gió</strong>
-                                <span style="display:block; font-size:0.7rem; color:var(--text-muted);">Công tắc Rơ-le (Relay)</span>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-
-                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1.25rem; border-top:1px solid var(--card-border); padding-top:1rem;">
-                    <button type="button" class="btn-action" onclick="AppCore.closeAddRoomModal()">Hủy</button>
-                    <button type="submit" class="btn-action" style="background:var(--accent-primary); color:#ffffff; font-weight:700; border-color:var(--accent-primary); padding:0.6rem 1.4rem;">
-                        ✨ Tạo Phòng Ngay
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Xem & Sao Chép Mã Nguồn ESP32 Mẫu Cho Node -->
-    <div class="modal-overlay" id="espCodeModalOverlay">
-        <div class="modal-card" style="max-width:720px; text-align:left;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div style="width:38px; height:38px; border-radius:10px; background:#eff6ff; color:var(--accent-primary); display:flex; align-items:center; justify-content:center; font-size:1.2rem;">
-                        ⚡
-                    </div>
-                    <div>
-                        <h3 style="font-size:1.15rem; font-weight:800; color:var(--text-primary);" id="espModalTitle">Mã Nguồn ESP32 Cho Node</h3>
-                        <p style="font-size:0.75rem; color:var(--text-muted);">Chỉ cần dán vào Arduino IDE và nạp cho chip - Không cần sửa code web</p>
-                    </div>
-                </div>
-                <span style="font-size:1.5rem; cursor:pointer; color:var(--text-muted);" onclick="AppCore.closeEspCodeModal()">&times;</span>
-            </div>
-
-            <div style="background:#f8fafc; border:1px solid var(--card-border); border-radius:var(--radius-md); padding:0.75rem 1rem; margin-bottom:1rem; font-size:0.8rem; color:var(--text-secondary); line-height:1.6;">
-                <strong>📌 Hướng dẫn sử dụng phần cứng:</strong><br>
-                1. Mở <strong>Arduino IDE</strong> &rarr; Cài đặt thư viện <code>FirebaseESP32</code> và <code>DHT sensor library</code>.<br>
-                2. Sao chép đoạn code hoàn chỉnh bên dưới, điền tên Wifi & Password nhà bạn.<br>
-                3. Nạp vào mạch ESP32. Khi mạch bật nguồn, các chỉ số cảm biến và công tắc điều khiển sẽ <strong>tự động liên kết thời gian thực lên web</strong>!
-            </div>
-
-            <div style="position:relative;">
-                <textarea id="espCodeTextarea" readonly style="width:100%; height:280px; background:#0f172a; color:#f8fafc; font-family:Consolas, Monaco, monospace; font-size:0.75rem; padding:1rem; border-radius:10px; border:1px solid #334155; resize:none; line-height:1.5; outline:none; white-space:pre;"></textarea>
-                <button class="btn-action" style="position:absolute; top:12px; right:12px; background:var(--accent-primary); color:#ffffff; font-weight:700; border:none; padding:0.4rem 0.9rem; font-size:0.75rem; box-shadow:0 2px 8px rgba(0,0,0,0.3);" onclick="AppCore.copyEspCode()">
-                    📋 Sao Chép Code
-                </button>
-            </div>
-
-            <div style="display:flex; justify-content:flex-end; margin-top:1rem;">
-                <button class="btn-action" onclick="AppCore.closeEspCodeModal()">Đóng</button>
             </div>
         </div>
     </div>
