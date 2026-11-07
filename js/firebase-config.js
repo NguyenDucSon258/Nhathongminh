@@ -259,7 +259,7 @@ const SmartHomeFirebase = {
 
         // 6. CỬA CHÍNH (MoCua: true = Mở, false = Khóa; 0/false: Khóa, 90/true: Mở)
         const rawDoor = this.findFieldValue(sources, [
-            'MoCua', 'mo_cua', 'Mo_Cua', 'mocua', 'cua_chinh', 'CuaChinh', 'cua', 'Cua', 'door', 'Door', 'servo', 'Servo', 'KhoaCua'
+            'MoCua', 'mo_cua', 'Mo_Cua', 'mocua', 'cua_chinh', 'CuaChinh', 'cua', 'Cua', 'door', 'Door', 'servo', 'Servo', 'KhoaCua', 'CuaMo', 'cua_mo'
         ]);
         if (rawDoor !== undefined) {
             if (rawDoor === 90 || rawDoor === true || rawDoor === '90' || String(rawDoor).toUpperCase() === 'OPEN' || String(rawDoor).toUpperCase() === 'TRUE') {
@@ -267,6 +267,14 @@ const SmartHomeFirebase = {
             } else {
                 normalized.doorLocked = true; // Đang Đóng/Khóa (Servo 0°)
             }
+        }
+
+        // 6b. MẬT KHẨU MỞ CỬA TỪ XA (DieuKhien/MatKhau)
+        const rawMatKhau = this.findFieldValue(sources, [
+            'MatKhau', 'mat_khau', 'Mat_Khau', 'matkhau', 'doorPassword', 'door_password', 'password'
+        ]);
+        if (rawMatKhau !== undefined && rawMatKhau !== null && String(rawMatKhau).trim() !== '') {
+            normalized.doorPassword = String(rawMatKhau).trim();
         }
 
         // 7. ĐÈN PHÒNG KHÁCH (DenKhach, DenPhongKhach,...)
@@ -381,6 +389,14 @@ const SmartHomeFirebase = {
                 updates['NhaThongMinhV1/DieuKhien/MoCua'] = isOpen;
                 break;
             }
+            case 'door_password':
+            case 'password': {
+                const newPin = (extra && extra.password) ? extra.password : action;
+                if (newPin) {
+                    updates['NhaThongMinhV1/DieuKhien/MatKhau'] = String(newPin).trim();
+                }
+                break;
+            }
             case 'light_living': {
                 updates['NhaThongMinhV1/DieuKhien/DenKhach'] = (action === 'on');
                 break;
@@ -442,6 +458,52 @@ const SmartHomeFirebase = {
         } catch (err) {
             console.error("❌ [Firebase] Ghi lệnh lên Firebase thất bại:", err);
             await this.logDeviceActionToFirestore(deviceId, action, extra);
+            return false;
+        }
+    },
+
+    /**
+     * Cập nhật mã PIN mật khẩu mở cửa lên Firebase Realtime Database (DieuKhien/MatKhau)
+     */
+    updateDoorPassword: async function(newPassword) {
+        if (!this.db) {
+            console.warn("⚠️ [Firebase] Realtime Database chưa kết nối.");
+            return false;
+        }
+
+        const pinStr = String(newPassword).trim();
+        if (!pinStr) return false;
+
+        const updates = {};
+        updates['NhaThongMinhV1/DieuKhien/MatKhau'] = pinStr;
+
+        try {
+            await this.db.ref().update(updates);
+            console.log("🔥 [Firebase Realtime Database] Đã đồng bộ thành công DieuKhien/MatKhau =", pinStr);
+
+            // Ghi nhận nhật ký vào Cloud Firestore nếu có
+            if (this.firestore) {
+                const currentUser = (window.AppCore && window.AppCore.state && window.AppCore.state.currentUser) 
+                    ? window.AppCore.state.currentUser 
+                    : { name: "Chủ hộ", role: "admin" };
+                try {
+                    await this.firestore.collection('device_logs').add({
+                        user_id: currentUser.id || "admin_default",
+                        user_name: currentUser.name || "Chủ hộ",
+                        user_role: currentUser.role || "admin",
+                        device_id: "door_password",
+                        device_name: "Mật Khẩu Cửa Chính",
+                        action: "change_password",
+                        action_label: "ĐỔI MẬT KHẨU",
+                        message: `${currentUser.name} đã đổi mã PIN mở cửa trên Firebase (DieuKhien/MatKhau: ${pinStr})`,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        created_at_str: new Date().toLocaleTimeString('vi-VN') + ' - ' + new Date().toLocaleDateString('vi-VN')
+                    });
+                } catch (e) {}
+            }
+            return true;
+        } catch (err) {
+            console.error("❌ [Firebase] Lỗi khi ghi MatKhau lên Firebase:", err);
             return false;
         }
     },

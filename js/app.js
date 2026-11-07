@@ -257,6 +257,16 @@ const AppCore = {
         } else if (data.rackPosition !== undefined) {
             this.state.devices.rackPosition = data.rackPosition;
         }
+
+        // Mật khẩu mở cửa từ xa (DieuKhien/MatKhau trên Firebase Realtime Database)
+        if (data.doorPassword !== undefined && data.doorPassword !== null) {
+            const fbPin = String(data.doorPassword).trim();
+            if (fbPin && fbPin !== this.state.doorPassword) {
+                this.state.doorPassword = fbPin;
+                localStorage.setItem('smarthome_door_pin', fbPin);
+                console.log("🔥 [Firebase Realtime Data] Đã nhận và đồng bộ mật khẩu mở cửa DieuKhien/MatKhau =", fbPin);
+            }
+        }
         
         this.saveStateToStorage();
         this.renderCurrentPage();
@@ -626,6 +636,18 @@ const AppCore = {
             btnDoor.innerText = isLocked ? "Mở Khóa (90°)" : "Khóa Cửa (0°)";
         }
 
+        // Cập nhật trạng thái hiển thị mã PIN / Mật khẩu Firebase
+        const elPinInput = document.getElementById('remoteDoorPasswordInput');
+        const elPinSyncStatus = document.getElementById('doorPinSyncStatus');
+        const currentPin = this.state.doorPassword || localStorage.getItem('smarthome_door_pin') || "1234";
+        if (elPinInput && !elPinInput.value) {
+            elPinInput.placeholder = `Nhập mã PIN (${currentPin ? 'Đã đồng bộ' : 'Mặc định: 1234'})`;
+        }
+        if (elPinSyncStatus) {
+            elPinSyncStatus.innerText = "Đã đồng bộ Firebase (DieuKhien/MatKhau)";
+            elPinSyncStatus.style.color = "var(--accent-green)";
+        }
+
         // Block trạng thái cửa nổi bật (doorStatusDisplay)
         const doorDisplay = document.getElementById('doorStatusDisplay');
         const doorStatusIcon = document.getElementById('doorStatusIcon');
@@ -973,11 +995,133 @@ const AppCore = {
     },
 
     /**
-     * Đổi mật khẩu mở cửa từ xa
+     * Mở modal Đổi Mật Khẩu Khóa Cửa (Đồng bộ Firebase DieuKhien/MatKhau)
+     */
+    openChangePasswordModal: function() {
+        const modal = document.getElementById('changePasswordModalOverlay');
+        if (!modal) {
+            this.promptChangeDoorPassword();
+            return;
+        }
+        const oldInput = document.getElementById('modalOldPin');
+        const newInput = document.getElementById('modalNewPin');
+        const confirmInput = document.getElementById('modalConfirmPin');
+        const msgEl = document.getElementById('modalChangePasswordMsg');
+
+        if (oldInput) oldInput.value = '';
+        if (newInput) newInput.value = '';
+        if (confirmInput) confirmInput.value = '';
+        if (msgEl) {
+            const currentPin = this.state.doorPassword || localStorage.getItem('smarthome_door_pin') || "1234";
+            msgEl.innerText = `Mã PIN đang lưu: ${currentPin ? '•'.repeat(currentPin.length) : '1234'} (Khớp với Firebase DieuKhien/MatKhau)`;
+            msgEl.style.color = "var(--text-muted)";
+        }
+        modal.classList.add('active');
+        if (oldInput) setTimeout(() => oldInput.focus(), 150);
+    },
+
+    /**
+     * Đóng modal Đổi Mật Khẩu
+     */
+    closeChangePasswordModal: function() {
+        const modal = document.getElementById('changePasswordModalOverlay');
+        if (modal) modal.classList.remove('active');
+    },
+
+    /**
+     * Xử lý biểu mẫu đổi mật khẩu từ modal & đồng bộ trực tiếp lên Firebase
+     */
+    submitChangePasswordModal: async function() {
+        const oldInput = document.getElementById('modalOldPin');
+        const newInput = document.getElementById('modalNewPin');
+        const confirmInput = document.getElementById('modalConfirmPin');
+        const msgEl = document.getElementById('modalChangePasswordMsg');
+        const btnSubmit = document.getElementById('btnSubmitChangePin');
+
+        const currentPin = this.state.doorPassword || localStorage.getItem('smarthome_door_pin') || "1234";
+        const oldVal = oldInput ? oldInput.value.trim() : '';
+        const newVal = newInput ? newInput.value.trim() : '';
+        const confirmVal = confirmInput ? confirmInput.value.trim() : '';
+
+        if (!oldVal) {
+            if (msgEl) { msgEl.innerText = "⚠️ Vui lòng nhập mã PIN hiện tại!"; msgEl.style.color = "var(--accent-amber)"; }
+            if (oldInput) oldInput.focus();
+            return;
+        }
+
+        if (oldVal !== currentPin) {
+            if (msgEl) { msgEl.innerText = "❌ Mã PIN hiện tại không chính xác!"; msgEl.style.color = "var(--accent-red)"; }
+            if (oldInput) { oldInput.focus(); oldInput.select(); }
+            this.showToast("Mã PIN hiện tại không chính xác!", "error");
+            return;
+        }
+
+        if (newVal.length < 4) {
+            if (msgEl) { msgEl.innerText = "⚠️ Mã PIN mới phải có tối thiểu 4 ký tự!"; msgEl.style.color = "var(--accent-amber)"; }
+            if (newInput) newInput.focus();
+            return;
+        }
+
+        if (newVal !== confirmVal) {
+            if (msgEl) { msgEl.innerText = "❌ Xác nhận mã PIN mới không khớp!"; msgEl.style.color = "var(--accent-red)"; }
+            if (confirmInput) confirmInput.focus();
+            return;
+        }
+
+        if (btnSubmit) {
+            btnSubmit.disabled = true;
+            btnSubmit.innerText = "⏳ Đang đồng bộ lên Firebase...";
+        }
+
+        // Cập nhật State nội bộ & LocalStorage
+        this.state.doorPassword = newVal;
+        localStorage.setItem('smarthome_door_pin', newVal);
+
+        // ĐỒNG BỘ TRỰC TIẾP LÊN FIREBASE REALTIME DATABASE (DieuKhien/MatKhau)
+        let fbSuccess = false;
+        if (window.SmartHomeFirebase && window.SmartHomeFirebase.isFirebaseEnabled) {
+            fbSuccess = await window.SmartHomeFirebase.updateDoorPassword(newVal);
+        }
+
+        if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.innerText = "💾 Lưu & Đồng Bộ Firebase";
+        }
+
+        if (msgEl) {
+            msgEl.innerText = fbSuccess 
+                ? "✅ Đã lưu và đồng bộ thành công lên Firebase DieuKhien/MatKhau!" 
+                : "✅ Đã cập nhật mã PIN trên thiết bị thành công!";
+            msgEl.style.color = "var(--accent-green)";
+        }
+
+        const doorMsg = document.getElementById('doorPasswordMsg');
+        if (doorMsg) {
+            doorMsg.innerText = `🔑 Đã cập nhật mật khẩu mới [${newVal}] và đồng bộ lên Firebase (DieuKhien/MatKhau)!`;
+            doorMsg.style.color = "var(--accent-green)";
+        }
+
+        this.showToast(`🔥 Đã đồng bộ mã PIN mới [${newVal}] lên Firebase (DieuKhien/MatKhau)!`, "success");
+        this.addLog(`Đổi mã PIN mở cửa: ${newVal} -> Đã đồng bộ Firebase DieuKhien/MatKhau`, "cmd");
+        this.renderOverviewPage();
+
+        setTimeout(() => {
+            this.closeChangePasswordModal();
+        }, 800);
+    },
+
+    /**
+     * Đổi mật khẩu mở cửa từ xa (Hỗ trợ mở modal hoặc prompt)
      */
     promptChangeDoorPassword: function() {
+        const modal = document.getElementById('changePasswordModalOverlay');
+        if (modal) {
+            this.openChangePasswordModal();
+            return;
+        }
+
         const currentPin = this.state.doorPassword || localStorage.getItem('smarthome_door_pin') || "1234";
-        const oldPin = prompt("Nhập mã PIN mật khẩu hiện tại (Mặc định: 1234):");
+        const oldPin = prompt(`Nhập mã PIN mật khẩu hiện tại (Đang lưu: ${currentPin}):`);
         if (oldPin === null) return;
         if (oldPin.trim() !== currentPin) {
             alert("❌ Mật khẩu hiện tại không chính xác!");
@@ -994,12 +1138,18 @@ const AppCore = {
 
         this.state.doorPassword = trimmed;
         localStorage.setItem('smarthome_door_pin', trimmed);
+
+        if (window.SmartHomeFirebase && window.SmartHomeFirebase.isFirebaseEnabled) {
+            window.SmartHomeFirebase.updateDoorPassword(trimmed);
+        }
+
         const msgEl = document.getElementById('doorPasswordMsg');
         if (msgEl) {
-            msgEl.innerText = "🔑 Đã cập nhật mật khẩu mở cửa mới thành công!";
-            msgEl.style.color = "var(--accent-primary)";
+            msgEl.innerText = `🔑 Đã đồng bộ mã PIN [${trimmed}] lên Firebase DieuKhien/MatKhau!`;
+            msgEl.style.color = "var(--accent-green)";
         }
-        this.showToast("Đã đổi mã PIN mở cửa từ xa thành công!", "success");
+        this.showToast(`🔥 Đã đồng bộ mã PIN mới [${trimmed}] lên Firebase DieuKhien/MatKhau!`, "success");
+        this.renderOverviewPage();
     },
 
     /**
