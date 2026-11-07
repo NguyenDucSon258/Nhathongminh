@@ -393,8 +393,12 @@ const SmartHomeFirebase = {
                 break;
             }
             case 'rack': {
-                const isExtend = (action === 'extend' || action === 'ra' || action === true);
+                const isExtend = (action === 'extend' || action === 'ra' || action === true || action === 90 || action === 180);
+                const angle = (extra && typeof extra.angle === 'number') ? extra.angle : (isExtend ? 90 : 0);
+                // Cập nhật boolean GianPhoi (true = vươn ra ngoài, false = thu vào nhà)
                 updates['NhaThongMinhV1/DieuKhien/GianPhoi'] = isExtend;
+                // Cập nhật góc số nguyên để MCU đọc trực tiếp servo.write(angle)
+                updates['NhaThongMinhV1/DieuKhien/GocGianPhoi'] = angle;
                 break;
             }
             default:

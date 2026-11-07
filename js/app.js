@@ -512,13 +512,19 @@ const AppCore = {
                     if (bannerTitle) bannerTitle.innerText = "CẢNH BÁO RÒ RỈ KHÍ GAS NGUY HIỂM!";
                     if (bannerDesc) bannerDesc.innerText = `Phát hiện nồng độ khí gas vượt ngưỡng an toàn (>${this.state.thresholds.gasDangerPpm} PPM): ${gasVal} PPM.`;
                 }
+
+                // Âm thanh cảnh báo còi hú khi mức khí gas vượt qua 2000 PPM
+                if (hasGas && gasVal > this.state.thresholds.gasDangerPpm) {
+                    this.startSiren();
+                } else {
+                    this.stopSiren();
+                }
             } else if (!isDanger) {
                 banner.classList.remove('active');
                 this.state.alertDismissed = false;
+                this.stopSiren();
             }
         }
-        // Đã tắt hoàn toàn còi hú âm thanh
-        this.stopSiren();
     },
 
     /**
@@ -759,16 +765,35 @@ const AppCore = {
         }
 
         const isExtended = (this.state.devices.rackPosition === 'extended');
+        const rackDisplay = document.getElementById('rackStatusDisplay');
+        const ovRackServoSub = document.getElementById('ovRackServoSub');
+        const ovRackStatusPill = document.getElementById('ovRackStatusPill');
+
         if (elRack) {
-            elRack.innerText = isExtended ? "Đang vươn ra (Phơi nắng)" : "Đã thu vào an toàn (Trong nhà)";
+            elRack.innerText = isExtended ? "ĐANG VƯƠN RA (PHƠI NẮNG)" : "ĐÃ THU VÀO TRONG NHÀ";
             elRack.style.color = isExtended ? "var(--accent-green)" : "var(--accent-primary)";
         }
         if (ovRackBadge) {
-            ovRackBadge.innerText = isExtended ? "Đang Phơi" : "Đã Thu Vào";
+            ovRackBadge.innerText = isExtended ? "Đang Phơi (90°)" : "Đã Thu Vào (0°)";
             ovRackBadge.className = isExtended ? "status-pill online" : "status-pill";
         }
         if (ovRackIcon) {
             ovRackIcon.innerText = isExtended ? "☀️" : "🏠";
+        }
+        if (ovRackServoSub) {
+            ovRackServoSub.innerText = isExtended 
+                ? "Động cơ Servo: 90° (Vươn ra) · Firebase: GianPhoi = true (90°)" 
+                : "Động cơ Servo: 0° (Thu vào) · Firebase: GianPhoi = false (0°)";
+        }
+        if (ovRackStatusPill) {
+            ovRackStatusPill.innerText = isExtended ? "90° OUT" : "0° IN";
+            ovRackStatusPill.style.color = isExtended ? "var(--accent-green)" : "var(--accent-primary)";
+            ovRackStatusPill.style.borderColor = isExtended ? "rgba(16,185,129,0.35)" : "rgba(37,99,235,0.35)";
+            ovRackStatusPill.style.background = isExtended ? "rgba(16,185,129,0.15)" : "rgba(37,99,235,0.15)";
+        }
+        if (rackDisplay) {
+            rackDisplay.style.background = isExtended ? "rgba(16,185,129,0.08)" : "rgba(37,99,235,0.08)";
+            rackDisplay.style.borderColor = isExtended ? "rgba(16,185,129,0.3)" : "rgba(37,99,235,0.3)";
         }
 
         // Cập nhật trạng thái nút nhấn điều khiển giàn phơi
@@ -914,6 +939,17 @@ const AppCore = {
             alert("❌ Mật khẩu không chính xác!");
             this.showToast("Sai mật khẩu mở cửa từ xa!", "error");
         }
+    },
+
+    /**
+     * Điều khiển động cơ Servo giàn phơi (Kéo vào 0° / Đưa ra 90°)
+     */
+    controlRackServo: function(action, targetAngle) {
+        const isExtend = (action === 'extend' || action === 'ra' || action === true || action === 90 || action === 180);
+        const angle = (typeof targetAngle === 'number') ? targetAngle : (isExtend ? 90 : 0);
+        this.sendCommand('rack', isExtend ? 'extend' : 'retract', { angle: angle });
+        this.showToast(isExtend ? `☀️ Động cơ Servo: Đang đưa giàn ra (${angle}°) đón nắng!` : `🏠 Động cơ Servo: Đang kéo giàn vào (${angle}°) nhà an toàn!`, 'info');
+        this.renderOverviewPage();
     },
 
     /**
@@ -1162,8 +1198,37 @@ const AppCore = {
     },
 
     startSiren: function() {
-        // Đã tắt hoàn toàn chế độ còi hú âm thanh - Chỉ hiển thị cảnh báo thị giác trên màn hình
-        this.stopSiren();
+        try {
+            this.initAudioContext();
+            if (!this.audioContext) return;
+            if (this.audioContext.state === 'suspended') {
+                this.audioContext.resume();
+            }
+            if (this.isSirenPlaying) return;
+
+            // Tạo Oscillator phát âm thanh cảnh báo bíp bíp dồn dập
+            this.sirenOscillator = this.audioContext.createOscillator();
+            this.sirenGain = this.audioContext.createGain();
+
+            this.sirenOscillator.type = 'sawtooth';
+            const now = this.audioContext.currentTime;
+            this.sirenOscillator.frequency.setValueAtTime(800, now);
+
+            // Tần số dao động 800Hz <-> 1400Hz cảnh báo nguy hiểm khẩn cấp
+            for (let i = 0; i < 80; i++) {
+                this.sirenOscillator.frequency.linearRampToValueAtTime(1400, now + (i * 0.5) + 0.25);
+                this.sirenOscillator.frequency.linearRampToValueAtTime(800, now + (i * 0.5) + 0.5);
+            }
+
+            this.sirenGain.gain.setValueAtTime(0.18, now);
+            this.sirenOscillator.connect(this.sirenGain);
+            this.sirenGain.connect(this.audioContext.destination);
+
+            this.sirenOscillator.start();
+            this.isSirenPlaying = true;
+        } catch (e) {
+            console.warn("⚠️ Web Audio còi hú chưa phát được (cần người dùng tương tác click):", e);
+        }
     },
 
     stopSiren: function() {
@@ -1171,9 +1236,11 @@ const AppCore = {
             try {
                 this.sirenOscillator.stop();
                 this.sirenOscillator.disconnect();
+                if (this.sirenGain) this.sirenGain.disconnect();
             } catch (e) {}
             this.isSirenPlaying = false;
             this.sirenOscillator = null;
+            this.sirenGain = null;
         }
     },
 

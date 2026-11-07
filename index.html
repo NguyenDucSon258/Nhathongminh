@@ -537,29 +537,28 @@
                         </div>
                     </div>
 
-                    <!-- Vị trí giàn phơi -->
-                    <div class="card-widget-item" style="margin-bottom:0.75rem;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem;">
-                            <div>
-                                <div style="color:var(--text-secondary); font-size:0.78rem;">Vị Trí Giàn Phơi:</div>
-                                <div id="ovRackStatus" style="font-weight:800; font-size:0.95rem; color:var(--accent-green); margin-top:2px;">Đang vươn ra (Phơi nắng)</div>
-                            </div>
-                            <div id="ovRackIcon" style="font-size:1.8rem; line-height:1;">☀️</div>
+                    <!-- Trạng thái Động Cơ Servo Giàn Phơi -->
+                    <div id="rackStatusDisplay" style="margin-bottom:0.75rem; border-radius:10px; padding:0.65rem 0.85rem; display:flex; align-items:center; gap:0.65rem; background:rgba(16,185,129,0.08); border:1.5px solid rgba(16,185,129,0.3); transition:all 0.4s ease;">
+                        <div id="ovRackIcon" style="font-size:1.8rem; line-height:1;">☀️</div>
+                        <div style="flex:1;">
+                            <div id="ovRackStatus" style="font-size:0.9rem; font-weight:800; color:var(--accent-green); letter-spacing:0.02em;">ĐANG VƯƠN RA (PHƠI NẮNG)</div>
+                            <div id="ovRackServoSub" style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">Động cơ Servo: 90° · Firebase: GianPhoi = true</div>
                         </div>
+                        <div id="ovRackStatusPill" style="font-size:0.68rem; font-weight:700; padding:3px 8px; border-radius:99px; background:rgba(16,185,129,0.15); color:var(--accent-green); border:1px solid rgba(16,185,129,0.35);">90° OUT</div>
                     </div>
 
-                    <!-- NÚT NHẤN ĐIỀU KHIỂN KÉO GIÀN VÀO / ĐƯA GIÀN RA -->
+                    <!-- NÚT NHẤN ĐIỀU KHIỂN SERVO KÉO GIÀN VÀO / ĐƯA GIÀN RA -->
                     <div style="margin-top:auto;">
                         <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.03em; margin-bottom:6px;">
-                            <span>Nút Nhấn Điều Khiển:</span>
-                            <span style="font-family:monospace; font-weight:600;">GianPhoi</span>
+                            <span>Động Cơ Servo (Nút Nhấn):</span>
+                            <span style="font-family:monospace; font-weight:600;">GianPhoi (0° &bull; 90°)</span>
                         </div>
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                            <button type="button" class="btn-action" id="btnRackRetract" style="justify-content:center; padding:0.6rem 0.5rem; font-weight:700; font-size:0.82rem; border-radius:10px; transition:all 0.25s;" onclick="AppCore.sendCommand('rack', 'retract')" title="Bấm nút để kéo giàn phơi vào">
-                                📥 Kéo Giàn Vào
+                            <button type="button" class="btn-action" id="btnRackRetract" style="justify-content:center; padding:0.65rem 0.5rem; font-weight:700; font-size:0.82rem; border-radius:10px; transition:all 0.25s;" onclick="AppCore.controlRackServo('retract', 0)" title="Bấm nút để quay Servo 0° kéo giàn phơi vào">
+                                📥 Kéo Vào (0°)
                             </button>
-                            <button type="button" class="btn-action" id="btnRackExtend" style="justify-content:center; padding:0.6rem 0.5rem; font-weight:700; font-size:0.82rem; border-radius:10px; transition:all 0.25s;" onclick="AppCore.sendCommand('rack', 'extend')" title="Bấm nút để đưa giàn phơi ra ngoài">
-                                📤 Đưa Giàn Ra
+                            <button type="button" class="btn-action" id="btnRackExtend" style="justify-content:center; padding:0.65rem 0.5rem; font-weight:700; font-size:0.82rem; border-radius:10px; transition:all 0.25s;" onclick="AppCore.controlRackServo('extend', 90)" title="Bấm nút để quay Servo 90° đưa giàn phơi ra">
+                                📤 Đưa Ra (90°)
                             </button>
                         </div>
                     </div>
