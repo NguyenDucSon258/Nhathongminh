@@ -520,6 +520,44 @@ const AppCore = {
         if (elTemp) elTemp.innerText = hasTemp ? Number(this.state.sensors.temp).toFixed(1) : "--";
         if (elHum) elHum.innerText = hasHum ? this.state.sensors.hum : "--";
 
+        // Cập nhật text "Độ ẩm:" bên danh sách thông tin (ovHumText)
+        const elHumText = document.getElementById('ovHumText');
+        if (elHumText) {
+            if (hasHum) {
+                const h = this.state.sensors.hum;
+                elHumText.innerText = h + '%';
+                elHumText.style.color = (h >= 50 && h <= 70) ? 'var(--accent-green)' : (h > 85 ? 'var(--accent-red)' : 'var(--accent-amber)');
+            } else {
+                elHumText.innerText = 'Chờ dữ liệu...';
+                elHumText.style.color = 'var(--text-muted)';
+            }
+        }
+
+        // Cập nhật text "Tiện nghi:" (ovComfortText)
+        const elComfort = document.getElementById('ovComfortText');
+        if (elComfort) {
+            if (!hasTemp || !hasHum) {
+                elComfort.innerText = 'Chờ cảm biến';
+                elComfort.style.color = 'var(--text-muted)';
+            } else {
+                const t = this.state.sensors.temp;
+                const h = this.state.sensors.hum;
+                if (t >= 24 && t <= 29 && h >= 50 && h <= 70) {
+                    elComfort.innerText = '✅ Lý Tưởng';
+                    elComfort.style.color = 'var(--accent-green)';
+                } else if (t > 32 || h > 80) {
+                    elComfort.innerText = '🥵 Nóng Ẩm';
+                    elComfort.style.color = 'var(--accent-red)';
+                } else if (t < 20) {
+                    elComfort.innerText = '🥶 Lạnh';
+                    elComfort.style.color = 'var(--accent-indigo)';
+                } else {
+                    elComfort.innerText = '🌤 Chấp Nhận';
+                    elComfort.style.color = 'var(--accent-amber)';
+                }
+            }
+        }
+
         // Donut Độ ẩm
         const donutCircle = document.getElementById('ovHumDonutCircle');
         if (donutCircle) {
@@ -560,6 +598,30 @@ const AppCore = {
         }
         if (btnDoor) {
             btnDoor.innerText = isLocked ? "Mở Khóa (90°)" : "Khóa Cửa (0°)";
+        }
+
+        // Block trạng thái cửa nổi bật (doorStatusDisplay)
+        const doorDisplay = document.getElementById('doorStatusDisplay');
+        const doorStatusIcon = document.getElementById('doorStatusIcon');
+        const doorStatusLabel = document.getElementById('doorStatusLabel');
+        const doorStatusSub = document.getElementById('doorStatusSub');
+        const doorStatusPill = document.getElementById('doorStatusPill');
+        if (doorDisplay) {
+            if (isLocked) {
+                doorDisplay.style.background = 'rgba(239,68,68,0.08)';
+                doorDisplay.style.borderColor = 'rgba(239,68,68,0.3)';
+                if (doorStatusIcon) doorStatusIcon.innerText = '🔒';
+                if (doorStatusLabel) { doorStatusLabel.innerText = 'ĐANG KHÓA'; doorStatusLabel.style.color = 'var(--accent-red)'; }
+                if (doorStatusSub) doorStatusSub.innerText = 'Servo 0° · Firebase: MoCua = false';
+                if (doorStatusPill) { doorStatusPill.innerText = 'CLOSED'; doorStatusPill.style.background = 'rgba(239,68,68,0.15)'; doorStatusPill.style.color = 'var(--accent-red)'; doorStatusPill.style.borderColor = 'rgba(239,68,68,0.35)'; }
+            } else {
+                doorDisplay.style.background = 'rgba(16,185,129,0.08)';
+                doorDisplay.style.borderColor = 'rgba(16,185,129,0.35)';
+                if (doorStatusIcon) doorStatusIcon.innerText = '🔓';
+                if (doorStatusLabel) { doorStatusLabel.innerText = 'ĐANG MỞ'; doorStatusLabel.style.color = 'var(--accent-green)'; }
+                if (doorStatusSub) doorStatusSub.innerText = 'Servo 90° · Firebase: MoCua = true';
+                if (doorStatusPill) { doorStatusPill.innerText = 'OPEN'; doorStatusPill.style.background = 'rgba(16,185,129,0.15)'; doorStatusPill.style.color = 'var(--accent-green)'; doorStatusPill.style.borderColor = 'rgba(16,185,129,0.35)'; }
+            }
         }
 
         // Đèn phòng khách (DenKhach)

@@ -205,14 +205,14 @@
                                     <span class="indicator-dot" style="background:var(--accent-primary);"></span>
                                     Độ ẩm:
                                 </span>
-                                <span class="val">Chờ dữ liệu...</span>
+                                <span class="val"><span id="ovHumText">Chờ dữ liệu...</span></span>
                             </div>
                             <div class="donut-info-row">
                                 <span class="label">
                                     <span class="indicator-dot" style="background:var(--accent-green);"></span>
                                     Tiện nghi:
                                 </span>
-                                <span class="val" style="color:var(--text-muted);">Chờ cảm biến</span>
+                                <span class="val" id="ovComfortText" style="color:var(--text-muted);">Chờ cảm biến</span>
                             </div>
                         </div>
                     </div>
@@ -307,6 +307,16 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- TRẠNG THÁI CỬA NỔI BẬT -->
+                    <div id="doorStatusDisplay" style="margin-bottom:0.75rem; border-radius:10px; padding:0.75rem 1rem; display:flex; align-items:center; gap:0.75rem; background:rgba(239,68,68,0.08); border:1.5px solid rgba(239,68,68,0.3); transition:all 0.4s ease;">
+                        <div id="doorStatusIcon" style="font-size:2rem; line-height:1;">🔒</div>
+                        <div style="flex:1;">
+                            <div id="doorStatusLabel" style="font-size:1rem; font-weight:800; color:var(--accent-red); letter-spacing:0.03em;">ĐANG KHÓA</div>
+                            <div id="doorStatusSub" style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;">Servo 0° · Firebase: MoCua = false</div>
+                        </div>
+                        <div id="doorStatusPill" style="font-size:0.68rem; font-weight:700; padding:3px 10px; border-radius:99px; background:rgba(239,68,68,0.15); color:var(--accent-red); border:1px solid rgba(239,68,68,0.35);">CLOSED</div>
                     </div>
 
                     <!-- MỤC NHẬP MẬT KHẨU MỞ CỬA TỪ XA -->
