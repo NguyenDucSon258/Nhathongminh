@@ -299,19 +299,23 @@ const SmartHomeFirebase = {
         ]);
         if (rawAlarm !== undefined) normalized.alarmActive = this.parseBoolean(rawAlarm);
 
-        // 12. GIÀN PHƠI (Sân phơi tự động)
-        const rawRackMode = this.findFieldValue(sources, ['gian_phoi_che_do', 'GianPhoiCheDo', 'rackMode']);
-        if (rawRackMode !== undefined) normalized.rackMode = String(rawRackMode);
-
-        const rawRackPos = this.findFieldValue(sources, ['gianphoi', 'GianPhoi', 'GocGianPhoi', 'gian_phoi', 'Gian_Phoi', 'gian_phoi_vi_tri', 'GianPhoiViTri', 'rackPosition', 'rackPos']);
-        if (rawRackPos !== undefined) {
-            if (typeof rawRackPos === 'boolean') {
-                normalized.rackPosition = rawRackPos ? 'extended' : 'retracted';
-            } else if (typeof rawRackPos === 'string') {
-                const lower = rawRackPos.toLowerCase();
-                normalized.rackPosition = (lower.includes('ra') || lower.includes('extend') || lower === 'true') ? 'extended' : 'retracted';
-            } else {
-                normalized.rackPosition = String(rawRackPos);
+        // 12. GIÀN PHƠI (Sân phơi tự động - DieuKhien/GiaTroi: true = Kéo vào, false = Cho phép giàn ra)
+        const rawGiaTroi = this.findFieldValue(sources, ['GiaTroi', 'gia_troi', 'giatroi', 'Gia_Troi']);
+        if (rawGiaTroi !== undefined) {
+            const isRetracted = this.parseBoolean(rawGiaTroi);
+            normalized.rackPosition = isRetracted ? 'retracted' : 'extended';
+            normalized.giaTroi = isRetracted;
+        } else {
+            const rawRackPos = this.findFieldValue(sources, ['gianphoi', 'GianPhoi', 'GocGianPhoi', 'gian_phoi', 'Gian_Phoi', 'gian_phoi_vi_tri', 'GianPhoiViTri', 'rackPosition', 'rackPos']);
+            if (rawRackPos !== undefined) {
+                if (typeof rawRackPos === 'boolean') {
+                    normalized.rackPosition = rawRackPos ? 'extended' : 'retracted';
+                } else if (typeof rawRackPos === 'string') {
+                    const lower = rawRackPos.toLowerCase();
+                    normalized.rackPosition = (lower.includes('ra') || lower.includes('extend') || lower === 'true') ? 'extended' : 'retracted';
+                } else {
+                    normalized.rackPosition = String(rawRackPos);
+                }
             }
         }
 
@@ -400,11 +404,11 @@ const SmartHomeFirebase = {
             }
             case 'rack': {
                 const isExtend = (action === 'extend' || action === 'ra' || action === true || action === 90 || action === 180);
-                // Vi xử lý điều khiển động cơ servo giàn phơi theo trường cảm biến CamBien/TroiMua:
-                // - Đưa giàn ra ngoài phơi: CamBien/TroiMua = false (Không mưa -> Servo vươn ra 90°)
-                // - Kéo giàn vào trong nhà: CamBien/TroiMua = true (Có mưa -> Servo thu vào 0°)
-                const isRaining = !isExtend;
-                updates['NhaThongMinhV1/CamBien/TroiMua'] = isRaining;
+                // Vi xử lý điều khiển động cơ servo giàn phơi theo trường DieuKhien/GiaTroi trong Realtime Database:
+                // - true: Kéo vào
+                // - false: Cho phép giàn ra
+                const isRetract = !isExtend;
+                updates['NhaThongMinhV1/DieuKhien/GiaTroi'] = isRetract;
                 break;
             }
             default:
@@ -473,7 +477,7 @@ const SmartHomeFirebase = {
                 try { await this.db.ref('NhaThongMinhV1/DieuKhien/' + item).remove(); } catch(e) {}
             }
 
-            console.log("🧹 [Firebase] Đã dọn sạch mọi trường tự tạo, chỉ giữ đúng 5 trường sẵn có trong DieuKhien (CheDoPIR, DenBep, DenKhach, DenNgu, MoCua)!");
+            console.log("🧹 [Firebase] Đã dọn sạch mọi trường tự tạo, chỉ giữ đúng các trường chuẩn trong DieuKhien (CheDoPIR, DenBep, DenKhach, DenNgu, MoCua, GiaTroi)!");
             if (!silent && window.AppCore) {
                 window.AppCore.showToast("Đã dọn sạch mọi trường tự tạo, chỉ giữ lại các trường sẵn có!", "success");
                 window.AppCore.addLog("Đã xóa sạch trường tự tạo trên Firebase. Giữ nguyên 100% cấu trúc phần cứng.", "cmd");

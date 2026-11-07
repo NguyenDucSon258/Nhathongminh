@@ -240,12 +240,6 @@ const AppCore = {
         }
         if (data.isRaining !== undefined) {
             this.state.sensors.isRaining = (data.isRaining !== null && data.isRaining !== "") ? Boolean(data.isRaining) : null;
-            if (this.state.sensors.isRaining !== null) {
-                // Đồng bộ vị trí giàn phơi theo trường cảm biến TroiMua trên Firebase:
-                // TroiMua = true (Mưa) -> Tự động kéo giàn vào (retracted)
-                // TroiMua = false (Nắng) -> Đưa giàn ra ngoài phơi (extended)
-                this.state.devices.rackPosition = this.state.sensors.isRaining ? 'retracted' : 'extended';
-            }
         }
 
         // Thiết bị
@@ -257,7 +251,12 @@ const AppCore = {
         if (data.alarmActive !== undefined) this.state.devices.alarmActive = Boolean(data.alarmActive);
         if (data.pirMode !== undefined) this.state.devices.pirMode = Boolean(data.pirMode);
         if (data.rackMode !== undefined) this.state.devices.rackMode = data.rackMode;
-        if (data.rackPosition !== undefined) this.state.devices.rackPosition = data.rackPosition;
+        if (data.giaTroi !== undefined) {
+            // DieuKhien/GiaTroi: true = Kéo vào (retracted), false = Cho phép giàn ra (extended)
+            this.state.devices.rackPosition = data.giaTroi ? 'retracted' : 'extended';
+        } else if (data.rackPosition !== undefined) {
+            this.state.devices.rackPosition = data.rackPosition;
+        }
         
         this.saveStateToStorage();
         this.renderCurrentPage();
@@ -373,7 +372,6 @@ const AppCore = {
                 break;
             case 'rack':
                 this.state.devices.rackPosition = (action === 'extend' || action === 'ra' || action === true) ? 'extended' : 'retracted';
-                this.state.sensors.isRaining = (this.state.devices.rackPosition === 'retracted');
                 break;
         }
     },
@@ -687,8 +685,36 @@ const AppCore = {
         if (swFanKitchen) swFanKitchen.checked = this.state.devices.fanKitchen;
 
         // Đèn phòng ngủ (DenNgu)
+        const isBedOn = Boolean(this.state.devices.lightBedroom);
         const swLightBedroom = document.getElementById('ovSwitchLightBedroom');
-        if (swLightBedroom) swLightBedroom.checked = this.state.devices.lightBedroom;
+        const badgeLightBedroom = document.getElementById('ovLightBedroomBadge');
+        const textLightBedroom = document.getElementById('ovLightBedroomStatusText');
+        const valLightBedroom = document.getElementById('ovLightBedroomVal');
+        const iconLightBedroom = document.getElementById('ovLightBedroomIcon');
+        const displayBedroom = document.getElementById('bedroomStatusDisplay');
+
+        if (swLightBedroom) swLightBedroom.checked = isBedOn;
+        if (badgeLightBedroom) {
+            badgeLightBedroom.innerText = isBedOn ? "Đang Bật" : "Đang Tắt";
+            badgeLightBedroom.className = isBedOn ? "status-pill online" : "status-pill";
+        }
+        if (textLightBedroom) {
+            textLightBedroom.innerText = isBedOn ? "ĐÈN ĐANG BẬT" : "ĐÈN ĐANG TẮT";
+            textLightBedroom.style.color = isBedOn ? "var(--accent-indigo)" : "var(--text-secondary)";
+        }
+        if (valLightBedroom) {
+            valLightBedroom.innerText = isBedOn ? "ON (true)" : "OFF (false)";
+            valLightBedroom.style.background = isBedOn ? "rgba(99,102,241,0.2)" : "rgba(100,116,139,0.15)";
+            valLightBedroom.style.color = isBedOn ? "var(--accent-indigo)" : "var(--text-muted)";
+        }
+        if (iconLightBedroom) {
+            if (isBedOn) iconLightBedroom.classList.add('on');
+            else iconLightBedroom.classList.remove('on');
+        }
+        if (displayBedroom) {
+            displayBedroom.style.background = isBedOn ? "rgba(99,102,241,0.12)" : "rgba(99,102,241,0.05)";
+            displayBedroom.style.borderColor = isBedOn ? "rgba(99,102,241,0.4)" : "rgba(99,102,241,0.2)";
+        }
 
         // Gas Bếp (KhiGas)
         const elGasKitchen = document.getElementById('ovGasKitchen');
@@ -790,11 +816,11 @@ const AppCore = {
         }
         if (ovRackServoSub) {
             ovRackServoSub.innerText = isExtended 
-                ? "Động cơ Servo: 90° (Vươn ra) · Firebase: TroiMua = false (Khô ráo)" 
-                : "Động cơ Servo: 0° (Thu vào) · Firebase: TroiMua = true (Mưa)";
+                ? "Động cơ Servo: 90° (Vươn ra) · Firebase: DieuKhien/GiaTroi = false" 
+                : "Động cơ Servo: 0° (Thu vào) · Firebase: DieuKhien/GiaTroi = true";
         }
         if (ovRackStatusPill) {
-            ovRackStatusPill.innerText = isExtended ? "90° OUT" : "0° IN";
+            ovRackStatusPill.innerText = isExtended ? "GIÀN RA (false)" : "THU VÀO (true)";
             ovRackStatusPill.style.color = isExtended ? "var(--accent-green)" : "var(--accent-primary)";
             ovRackStatusPill.style.borderColor = isExtended ? "rgba(16,185,129,0.35)" : "rgba(37,99,235,0.35)";
             ovRackStatusPill.style.background = isExtended ? "rgba(16,185,129,0.15)" : "rgba(37,99,235,0.15)";
@@ -998,15 +1024,16 @@ const AppCore = {
     },
 
     /**
-     * Điều khiển động cơ Servo giàn phơi (Kéo vào 0° / Đưa ra 90°)
+     * Điều khiển động cơ Servo giàn phơi qua trường DieuKhien/GiaTroi
+     * - true: Kéo vào
+     * - false: Cho phép giàn ra
      */
-    controlRackServo: function(action, targetAngle) {
-        const isExtend = (action === 'extend' || action === 'ra' || action === true || action === 90 || action === 180);
-        const angle = (typeof targetAngle === 'number') ? targetAngle : (isExtend ? 90 : 0);
-        this.sendCommand('rack', isExtend ? 'extend' : 'retract', { angle: angle });
+    controlRackServo: function(action) {
+        const isExtend = (action === 'extend' || action === 'ra' || action === false || action === 90 || action === 180);
+        this.sendCommand('rack', isExtend ? 'extend' : 'retract');
         this.showToast(isExtend 
-            ? "☀️ Đã đặt TroiMua = false (Khô ráo): Điều khiển Servo đưa giàn ra phơi!" 
-            : "🌧️ Đã đặt TroiMua = true (Mưa): Điều khiển Servo kéo giàn vào nhà!", 'info');
+            ? "☀️ Đã đặt DieuKhien/GiaTroi = false: Cho phép đưa giàn ra phơi!" 
+            : "📥 Đã đặt DieuKhien/GiaTroi = true: Kéo giàn phơi vào nhà!", 'info');
         this.renderOverviewPage();
     },
 

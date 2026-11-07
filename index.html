@@ -523,7 +523,7 @@
                             </div>
                             <div>
                                 <h3 class="card-title">Sân Phơi Tự Động</h3>
-                                <span class="card-subtitle">Cảm biến mưa (TroiMua) & Servo giàn phơi</span>
+                                <span class="card-subtitle">Điều khiển giàn (GiaTroi) & Cảm biến mưa</span>
                             </div>
                         </div>
                         <span id="ovRackBadge" class="status-pill online" style="font-size:0.75rem; padding:0.25rem 0.65rem;">Đang Phơi</span>
@@ -532,7 +532,7 @@
                     <!-- Thời tiết cảm biến mưa -->
                     <div class="card-widget-item">
                         <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem;">
-                            <span style="color:var(--text-secondary);">Trạng thái mưa (TroiMua):</span>
+                            <span style="color:var(--text-secondary);">Thời tiết (Cảm biến mưa):</span>
                             <span id="ovWeatherStatus" style="font-weight:700; color:var(--accent-amber);">☀️ Khô ráo / Hửng nắng</span>
                         </div>
                     </div>
@@ -542,30 +542,30 @@
                         <div id="ovRackIcon" style="font-size:1.8rem; line-height:1;">☀️</div>
                         <div style="flex:1;">
                             <div id="ovRackStatus" style="font-size:0.9rem; font-weight:800; color:var(--accent-green); letter-spacing:0.02em;">ĐANG VƯƠN RA (PHƠI NẮNG)</div>
-                            <div id="ovRackServoSub" style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">Trường Firebase: TroiMua = false (Khô ráo)</div>
+                            <div id="ovRackServoSub" style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">Trường Firebase: DieuKhien/GiaTroi = false</div>
                         </div>
-                        <div id="ovRackStatusPill" style="font-size:0.68rem; font-weight:700; padding:3px 8px; border-radius:99px; background:rgba(16,185,129,0.15); color:var(--accent-green); border:1px solid rgba(16,185,129,0.35);">PHƠI ĐỒ</div>
+                        <div id="ovRackStatusPill" style="font-size:0.68rem; font-weight:700; padding:3px 8px; border-radius:99px; background:rgba(16,185,129,0.15); color:var(--accent-green); border:1px solid rgba(16,185,129,0.35);">GIÀN RA (false)</div>
                     </div>
 
-                    <!-- NÚT NHẤN ĐIỀU KHIỂN SERVO QUA TRƯỜNG CẢM BIẾN MƯA TROIMUA -->
+                    <!-- NÚT NHẤN ĐIỀU KHIỂN SERVO QUA TRƯỜNG DIEUKHIEN/GIATROI -->
                     <div style="margin-top:auto;">
                         <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.03em; margin-bottom:6px;">
                             <span>Điều Khiển Giàn Phơi:</span>
-                            <span style="font-family:monospace; font-weight:600;">TroiMua</span>
+                            <span style="font-family:monospace; font-weight:600;">DieuKhien/GiaTroi</span>
                         </div>
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                            <button type="button" class="btn-action" id="btnRackRetract" style="justify-content:center; padding:0.65rem 0.5rem; font-weight:700; font-size:0.82rem; border-radius:10px; transition:all 0.25s;" onclick="AppCore.controlRackServo('retract', 0)" title="Bấm nút để đặt TroiMua = true (Báo mưa để Servo kéo giàn vào)">
-                                📥 Kéo Vào (Trời Mưa)
+                            <button type="button" class="btn-action" id="btnRackRetract" style="justify-content:center; padding:0.65rem 0.5rem; font-weight:700; font-size:0.82rem; border-radius:10px; transition:all 0.25s;" onclick="AppCore.controlRackServo('retract')" title="Bấm nút để đặt DieuKhien/GiaTroi = true (Kéo giàn vào)">
+                                📥 Kéo Vào (true)
                             </button>
-                            <button type="button" class="btn-action" id="btnRackExtend" style="justify-content:center; padding:0.65rem 0.5rem; font-weight:700; font-size:0.82rem; border-radius:10px; transition:all 0.25s;" onclick="AppCore.controlRackServo('extend', 90)" title="Bấm nút để đặt TroiMua = false (Nắng ráo để Servo đưa giàn ra)">
-                                📤 Đưa Ra (Hửng Nắng)
+                            <button type="button" class="btn-action" id="btnRackExtend" style="justify-content:center; padding:0.65rem 0.5rem; font-weight:700; font-size:0.82rem; border-radius:10px; transition:all 0.25s;" onclick="AppCore.controlRackServo('extend')" title="Bấm nút để đặt DieuKhien/GiaTroi = false (Cho phép giàn ra)">
+                                📤 Đưa Ra (false)
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- HÀNG 3 - CỘT 3: PHÒNG NGỦ & CÒI BÁO ĐỘNG KHẨN CẤP -->
+            <!-- HÀNG 3 - CỘT 3: PHÒNG NGỦ -->
             <div class="col-4">
                 <div class="card" style="height:100%; display:flex; flex-direction:column;">
                     <div class="card-header">
@@ -576,19 +576,26 @@
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="card-title">Phòng Ngủ & Còi Báo Động</h3>
-                                <span class="card-subtitle">Chiếu sáng (DenNgu) & Còi khẩn cấp</span>
+                                <h3 class="card-title">Phòng Ngủ</h3>
+                                <span class="card-subtitle">Chiếu sáng & Thiết bị</span>
                             </div>
                         </div>
-                        <span id="ovAlarmBadge" class="status-pill online" style="font-size:0.75rem; padding:0.25rem 0.65rem;">An Toàn</span>
+                        <span id="ovLightBedroomBadge" class="status-pill" style="font-size:0.75rem; padding:0.25rem 0.65rem;">Đang Tắt</span>
                     </div>
 
                     <!-- Đèn phòng ngủ -->
                     <div class="card-widget-item">
                         <div class="control-row">
-                            <div>
-                                <div style="font-size:0.85rem; font-weight:600;">Đèn Phòng Ngủ</div>
-                                <div class="control-desc">Biến phần cứng: <code>DenNgu</code></div>
+                            <div class="control-info">
+                                <div class="control-icon" id="ovLightBedroomIcon" style="color:var(--accent-indigo);">
+                                    <svg viewBox="0 0 24 24" stroke-width="2">
+                                        <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-7 7c0 2.5 1.5 4.5 3 6h8c1.5-1.5 3-3.5 3-6a7 7 0 0 0-7-7z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="control-name">Đèn Phòng Ngủ</div>
+                                    <div class="control-desc">Công tắc rơ-le (Biến: <code>DenNgu</code>)</div>
+                                </div>
                             </div>
                             <label class="cyber-switch">
                                 <input type="checkbox" id="ovSwitchLightBedroom" onchange="AppCore.sendCommand('light_bedroom', this.checked ? 'on' : 'off')">
@@ -597,24 +604,19 @@
                         </div>
                     </div>
 
-                    <!-- HỆ THỐNG CÒI BÁO ĐỘNG KHẨN CẤP (WEB AUDIO & PHẦN CỨNG) -->
-                    <div class="card-widget-item" id="ovAlarmBox" style="margin-top:auto; border:1px solid var(--card-border); transition:all 0.3s ease;">
-                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                            <div id="ovAlarmIcon" style="font-size:1.5rem; line-height:1;">🔔</div>
-                            <div style="flex:1;">
-                                <div id="ovAlarmStatusText" style="font-size:0.82rem; font-weight:800; color:var(--accent-green);">
-                                    Còi Báo Động: Sẵn Sàng (Tự Hú Khi Có Cháy/Gas)
-                                </div>
-                                <div style="font-size:0.68rem; color:var(--text-muted); margin-top:2px;">
-                                    Tự động phát còi Web Audio khi Cháy hoặc Gas > 2000
-                                </div>
-                            </div>
+                    <!-- Chi tiết trạng thái Đèn Phòng Ngủ -->
+                    <div id="bedroomStatusDisplay" style="margin-top:auto; border-radius:10px; padding:0.75rem 0.85rem; display:flex; align-items:center; gap:0.65rem; background:rgba(99,102,241,0.08); border:1.5px solid rgba(99,102,241,0.25); transition:all 0.3s ease;">
+                        <div id="ovBedroomStatusIcon" style="font-size:1.6rem; line-height:1;">💡</div>
+                        <div style="flex:1;">
+                            <div id="ovLightBedroomStatusText" style="font-size:0.85rem; font-weight:700; color:var(--text-secondary);">ĐÈN ĐANG TẮT</div>
+                            <div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">Trường Firebase: <code>DieuKhien/DenNgu</code></div>
                         </div>
+                        <span id="ovLightBedroomVal" style="font-size:0.72rem; font-weight:700; padding:3px 8px; border-radius:99px; background:rgba(100,116,139,0.15); color:var(--text-muted);">OFF</span>
+                    </div>
 
-                        <!-- Nút bật/tắt còi khẩn cấp -->
-                        <button type="button" class="btn-action" id="ovBtnAlarm" style="width:100%; justify-content:center; font-weight:700; padding:0.6rem; border-radius:10px; font-size:0.82rem; transition:all 0.25s;" onclick="AppCore.toggleAlarm()">
-                            🚨 BẬT CÒI BÁO ĐỘNG KHẨN CẤP
-                        </button>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.75rem; padding-top:0.65rem; border-top:1px solid var(--card-border); font-size:0.75rem; color:var(--text-muted);">
+                        <span>Cơ cấu chấp hành: <strong>Relay 220V</strong></span>
+                        <span style="color:var(--accent-indigo); font-weight:600;">Phòng Nghỉ Ngơi</span>
                     </div>
                 </div>
             </div>
