@@ -200,6 +200,14 @@ const AppCore = {
         // Cảm biến: Cập nhật giá trị thực tế do phần cứng gửi lên (nếu rỗng/chưa có thì giữ null)
         if (data.temp !== undefined) {
             this.state.sensors.temp = (data.temp !== null && data.temp !== "" && !isNaN(data.temp)) ? parseFloat(data.temp) : null;
+            if (this.state.sensors.temp !== null) {
+                if (this.state.sensors.tempMin === null || this.state.sensors.temp < this.state.sensors.tempMin) {
+                    this.state.sensors.tempMin = this.state.sensors.temp;
+                }
+                if (this.state.sensors.tempMax === null || this.state.sensors.temp > this.state.sensors.tempMax) {
+                    this.state.sensors.tempMax = this.state.sensors.temp;
+                }
+            }
         }
         if (data.hum !== undefined) {
             this.state.sensors.hum = (data.hum !== null && data.hum !== "" && !isNaN(data.hum)) ? parseFloat(data.hum) : null;

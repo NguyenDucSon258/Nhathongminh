@@ -1,7 +1,7 @@
 /**
  * =============================================================================
  * MODULE KẾT NỐI & ĐỒNG BỘ DỮ LIỆU ĐÁM MÂY VỚI FIREBASE REALTIME DATABASE
- * Dự Án: iot-smarthome2-dbf39
+ * Dự Án: smarthome-75c59
  * Hệ Thống Nhà Thông Minh v1
  * =============================================================================
  */
@@ -10,16 +10,16 @@ const SmartHomeFirebase = {
     // Đã kích hoạt kết nối với Firebase
     isFirebaseEnabled: true,
 
-    // Cấu hình Firebase Project chính thức của bạn
+    // Cấu hình Firebase Project smarthome-75c59 chính thức
     config: {
-        apiKey: "AIzaSyCxKZlIkrIsEtH4MOScf79cYeVrtHVyWvQ",
-        authDomain: "iot-smarthome2-dbf39.firebaseapp.com",
-        databaseURL: "https://iot-smarthome2-dbf39-default-rtdb.firebaseio.com",
-        projectId: "iot-smarthome2-dbf39",
-        storageBucket: "iot-smarthome2-dbf39.firebasestorage.app",
-        messagingSenderId: "1019090397705",
-        appId: "1:1019090397705:web:93e8263094690d469d66d8",
-        measurementId: "G-V0TXSS2KH2"
+        apiKey: "AIzaSyBzp4Kx852yJssd1seZgvicFwHhKmYkkqk",
+        authDomain: "smarthome-75c59.firebaseapp.com",
+        databaseURL: "https://smarthome-75c59-default-rtdb.firebaseio.com",
+        projectId: "smarthome-75c59",
+        storageBucket: "smarthome-75c59.firebasestorage.app",
+        messagingSenderId: "618128698522",
+        appId: "1:618128698522:web:2c08b025d7221c360c4323",
+        measurementId: "G-Q5EL4QR8TK"
     },
 
     db: null,
@@ -47,37 +47,41 @@ const SmartHomeFirebase = {
             }
 
             // 1. Kết nối Realtime Database (cho cảm biến & thiết bị)
-            this.db = firebase.database();
+            this.db = (this.app && typeof this.app.database === 'function') ? this.app.database() : firebase.database();
             this.isConnected = true;
             console.log("🔥 [Firebase] Đã kết nối Realtime Database: " + this.config.databaseURL);
 
             // 2. Kết nối Cloud Firestore (cho Quản lý Người dùng / Thành viên gia đình)
             if (typeof firebase.firestore === 'function') {
-                this.firestore = firebase.firestore();
-                console.log("🔥 [Cloud Firestore] Đã kết nối Cloud Firestore sẵn sàng quản lý thành viên gia đình!");
-                this.listenToFamilyMembers((members) => {
-                    this.familyMembers = members;
-                    if (window.AppCore && typeof window.AppCore.onFamilyMembersUpdate === 'function') {
-                        window.AppCore.onFamilyMembersUpdate(members);
-                    }
-                });
+                try {
+                    this.firestore = (this.app && typeof this.app.firestore === 'function') ? this.app.firestore() : firebase.firestore();
+                    console.log("🔥 [Cloud Firestore] Đã kết nối Cloud Firestore smarthome-75c59!");
+                    this.listenToFamilyMembers((members) => {
+                        this.familyMembers = members;
+                        if (window.AppCore && typeof window.AppCore.onFamilyMembersUpdate === 'function') {
+                            window.AppCore.onFamilyMembersUpdate(members);
+                        }
+                    });
+                } catch (fsErr) {
+                    console.warn("⚠️ [Cloud Firestore] Chú ý kết nối Firestore:", fsErr.message);
+                }
             }
 
             // Cập nhật trạng thái badge trên giao diện
             if (window.AppCore) {
                 window.AppCore.setConnectionStatus(true, 'online');
-                window.AppCore.showToast("🔥 Đã kết nối Firebase & Cloud Firestore!", "success");
+                window.AppCore.showToast("🔥 Đã kết nối Firebase smarthome-75c59!", "success");
             }
 
-            // Bắt đầu lắng nghe dữ liệu cảm biến thời gian thực
+            // Bắt đầu lắng nghe dữ liệu cảm biến thời gian thực (NhietDo, Doam,...)
             this.listenToAllNodes(onDataCallback);
 
-            // Kiểm tra và khởi tạo dữ liệu mẫu nếu database đang trống
+            // Kiểm tra database khi kết nối
             this.checkAndSeedDatabase();
 
             return true;
         } catch (error) {
-            console.error("❌ [Firebase] Lỗi kết nối Firebase:", error);
+            console.error("❌ [Firebase] Lỗi kết nối Firebase smarthome-75c59:", error);
             if (window.AppCore) {
                 window.AppCore.showToast("Lỗi kết nối Firebase: " + error.message, "error");
             }
@@ -87,16 +91,15 @@ const SmartHomeFirebase = {
 
     /**
      * Lắng nghe dữ liệu cảm biến & thiết bị từ Firebase Realtime Database
-     * Cấu trúc tối ưu: Chỉ đọc các trường gốc (Flat Root Fields) và đối tượng nguoi_dieu_khien
-     * Loại bỏ hoàn toàn sự phụ thuộc vào nhánh cồng kềnh 'smarthome'
+     * Lắng nghe trực tiếp từ node gốc '/' để đọc tức thời mọi trường dữ liệu
      */
     listenToAllNodes: function(callback) {
         if (!this.db) return;
 
-        // Lắng nghe trực tiếp node gốc '/' (Nơi lưu các biến tinh gọn: nhiet_do, do_am, den_phong_khach, nguoi_dieu_khien...)
         const rootRef = this.db.ref();
         rootRef.on('value', (snapshot) => {
             const data = snapshot.val();
+            console.log("🔥 [Firebase Realtime Data Received]:", data);
             if (data && typeof callback === 'function') {
                 this.processReceivedData(data, callback);
             }
@@ -106,75 +109,178 @@ const SmartHomeFirebase = {
     },
 
     /**
+     * Hàm quét và tìm giá trị linh hoạt từ data:
+     * - Quét cả root lẫn các sub-objects (smarthome, DHT, sensors, cam_bien,...)
+     * - Khớp không phân biệt hoa/thường, có hoặc không có dấu gạch dưới (NhietDo, Doam, nhiet_do, do_am,...)
+     */
+    findFieldValue: function(sources, keys) {
+        const cleanKeys = keys.map(k => k.toLowerCase().replace(/[\s_\-]/g, ''));
+        for (const src of sources) {
+            if (!src || typeof src !== 'object') continue;
+            // 1. Kiểm tra chính xác tên key (ưu tiên cao nhất)
+            for (const key of keys) {
+                if (src[key] !== undefined && src[key] !== null) return src[key];
+            }
+            // 2. Kiểm tra không phân biệt hoa/thường & dấu gạch dưới
+            for (const objKey of Object.keys(src)) {
+                const cleanKey = objKey.toLowerCase().replace(/[\s_\-]/g, '');
+                if (cleanKeys.includes(cleanKey)) {
+                    if (src[objKey] !== undefined && src[objKey] !== null) return src[objKey];
+                }
+            }
+        }
+        return undefined;
+    },
+
+    /**
+     * Chuyển đổi an toàn chuỗi/số sang float/int
+     */
+    parseNumeric: function(val) {
+        if (val === undefined || val === null || val === '') return null;
+        if (typeof val === 'number') return isNaN(val) ? null : val;
+        if (typeof val === 'string') {
+            const cleaned = val.replace(/[^0-9.\-]/g, '');
+            if (cleaned === '') return null;
+            const num = parseFloat(cleaned);
+            return isNaN(num) ? null : num;
+        }
+        return null;
+    },
+
+    /**
+     * Chuyển đổi an toàn sang boolean
+     */
+    parseBoolean: function(val) {
+        if (val === undefined || val === null || val === '') return null;
+        if (typeof val === 'boolean') return val;
+        if (typeof val === 'number') return val > 0;
+        if (typeof val === 'string') {
+            const lower = val.trim().toLowerCase();
+            return lower === 'true' || lower === '1' || lower === 'on' || lower === 'open' || lower === 'active';
+        }
+        return Boolean(val);
+    },
+
+    /**
      * Chuẩn hóa dữ liệu nhận được từ Firebase về State nội bộ
-     * Nếu các trường cảm biến đang rỗng (chờ vi xử lý gửi lên), gán giá trị null để web hiển thị chờ
+     * Đồng bộ chuẩn xác các trường thực tế như: NhietDo, Doam, gas, den, quat, cua,...
      */
     processReceivedData: function(data, callback) {
         if (!data) return;
         const normalized = {};
 
-        // 1. Nhiệt độ & Độ ẩm (DHT22) - Vi xử lý phần cứng gửi lên
-        if (data.nhiet_do !== undefined) {
-            normalized.temp = (data.nhiet_do !== null && data.nhiet_do !== "" && !isNaN(data.nhiet_do)) ? parseFloat(data.nhiet_do) : null;
-        } else if (data.temp !== undefined) {
-            normalized.temp = (data.temp !== null && data.temp !== "" && !isNaN(data.temp)) ? parseFloat(data.temp) : null;
+        // Gom các nguồn tìm kiếm: Root data trước, sau đó tới các object con (smarthome, DHT, sensors,...)
+        const sources = [data];
+        for (const k of Object.keys(data)) {
+            if (data[k] && typeof data[k] === 'object' && !Array.isArray(data[k])) {
+                sources.push(data[k]);
+            }
         }
 
-        if (data.do_am !== undefined) {
-            normalized.hum = (data.do_am !== null && data.do_am !== "" && !isNaN(data.do_am)) ? parseFloat(data.do_am) : null;
-        } else if (data.hum !== undefined) {
-            normalized.hum = (data.hum !== null && data.hum !== "" && !isNaN(data.hum)) ? parseFloat(data.hum) : null;
+        // 1. NHIỆT ĐỘ (NhietDo, Nhiet_Do, nhiet_do, temp, temperature,...)
+        const rawTemp = this.findFieldValue(sources, [
+            'NhietDo', 'Nhiet_Do', 'nhiet_do', 'nhietdo', 'DoC', 
+            'temp', 'temperature', 'Temperature', 'Nhiet', 'DHT11_NhietDo', 'DHT_NhietDo'
+        ]);
+        if (rawTemp !== undefined) {
+            normalized.temp = this.parseNumeric(rawTemp);
         }
 
-        // 2. Cảm biến Gas MQ2 - Vi xử lý phần cứng gửi lên
-        if (data.gas_phong_khach !== undefined) {
-            normalized.gasLiving = (data.gas_phong_khach !== null && data.gas_phong_khach !== "" && !isNaN(data.gas_phong_khach)) ? parseInt(data.gas_phong_khach) : null;
-        } else if (data.gasLiving !== undefined) {
-            normalized.gasLiving = (data.gasLiving !== null && data.gasLiving !== "" && !isNaN(data.gasLiving)) ? parseInt(data.gasLiving) : null;
+        // 2. ĐỘ ẨM (Doam, DoAm, Do_am, do_am, doam, hum, humidity,...)
+        const rawHum = this.findFieldValue(sources, [
+            'Doam', 'DoAm', 'Do_am', 'do_am', 'doam', 'hum', 
+            'humidity', 'Humidity', 'DHT11_Doam', 'DHT_Doam'
+        ]);
+        if (rawHum !== undefined) {
+            normalized.hum = this.parseNumeric(rawHum);
         }
 
-        if (data.gas_phong_bep !== undefined) {
-            normalized.gasKitchen = (data.gas_phong_bep !== null && data.gas_phong_bep !== "" && !isNaN(data.gas_phong_bep)) ? parseInt(data.gas_phong_bep) : null;
-        } else if (data.gasKitchen !== undefined) {
-            normalized.gasKitchen = (data.gasKitchen !== null && data.gasKitchen !== "" && !isNaN(data.gasKitchen)) ? parseInt(data.gasKitchen) : null;
+        // 3. KHÍ GAS MQ2 BẾP & PHÒNG KHÁCH
+        const rawGasKitchen = this.findFieldValue(sources, [
+            'gas_phong_bep', 'GasBep', 'Gas_Bep', 'gasKitchen', 'gas', 'Gas', 'MQ2', 'mq2', 'GasMQ2', 'KhiGas'
+        ]);
+        if (rawGasKitchen !== undefined) {
+            const num = this.parseNumeric(rawGasKitchen);
+            normalized.gasKitchen = (num !== null) ? parseInt(num) : null;
         }
 
-        // 3. Cảm biến chuyển động PIR
-        if (data.pir_phong_khach !== undefined) {
-            normalized.pirMotion = (data.pir_phong_khach !== null && data.pir_phong_khach !== "") ? Boolean(data.pir_phong_khach) : null;
-        } else if (data.pir !== undefined) {
-            normalized.pirMotion = (data.pir !== null && data.pir !== "") ? Boolean(data.pir) : null;
+        const rawGasLiving = this.findFieldValue(sources, [
+            'gas_phong_khach', 'GasKhach', 'Gas_Khach', 'gasLiving', 'gas_living'
+        ]);
+        if (rawGasLiving !== undefined) {
+            const num = this.parseNumeric(rawGasLiving);
+            normalized.gasLiving = (num !== null) ? parseInt(num) : null;
         }
 
-        // 4. Cảm biến mưa
-        if (data.cam_bien_mua !== undefined) {
-            normalized.isRaining = (data.cam_bien_mua !== null && data.cam_bien_mua !== "") ? Boolean(data.cam_bien_mua) : null;
-        } else if (data.rain !== undefined) {
-            normalized.isRaining = (data.rain !== null && data.rain !== "") ? Boolean(data.rain) : null;
+        // 4. CẢM BIẾN CHUYỂN ĐỘNG PIR
+        const rawPir = this.findFieldValue(sources, [
+            'pir_phong_khach', 'pir', 'PIR', 'Pir', 'ChuyenDong', 'chuyen_dong', 'motion', 'Motion'
+        ]);
+        if (rawPir !== undefined) {
+            normalized.pirMotion = this.parseBoolean(rawPir);
         }
 
-        // 5. Cửa chính (Servo 90°)
-        if (data.cua_chinh !== undefined) {
-            // true/90 = mở, false/0 = đóng
-            normalized.doorLocked = !(data.cua_chinh === true || data.cua_chinh === 90 || data.cua_chinh === "OPEN");
+        // 5. CẢM BIẾN MƯA
+        const rawRain = this.findFieldValue(sources, [
+            'cam_bien_mua', 'CamBienMua', 'mua', 'Mua', 'rain', 'Rain', 'isRaining', 'is_raining'
+        ]);
+        if (rawRain !== undefined) {
+            normalized.isRaining = this.parseBoolean(rawRain);
         }
 
-        // 6. Đèn chiếu sáng
-        if (data.den_phong_khach !== undefined) normalized.lightLiving = Boolean(data.den_phong_khach);
-        if (data.den_phong_bep !== undefined) normalized.lightKitchen = Boolean(data.den_phong_bep);
-        if (data.quat_bep !== undefined) normalized.fanKitchen = Boolean(data.quat_bep);
-        if (data.den_phong_ngu !== undefined) normalized.lightBedroom = Boolean(data.den_phong_ngu);
+        // 6. CỬA CHÍNH (0/false/CLOSE: Khóa, 90/true/OPEN: Mở)
+        const rawDoor = this.findFieldValue(sources, [
+            'cua_chinh', 'CuaChinh', 'cua', 'Cua', 'door', 'Door', 'servo', 'Servo', 'KhoaCua'
+        ]);
+        if (rawDoor !== undefined) {
+            if (rawDoor === 90 || rawDoor === true || rawDoor === '90' || String(rawDoor).toUpperCase() === 'OPEN') {
+                normalized.doorLocked = false; // Đang Mở
+            } else {
+                normalized.doorLocked = true; // Đang Đóng/Khóa
+            }
+        }
 
-        // 7. Còi báo động khẩn cấp
-        if (data.coi_bao_dong !== undefined) normalized.alarmActive = Boolean(data.coi_bao_dong);
+        // 7. ĐÈN PHÒNG KHÁCH
+        const rawLightLiving = this.findFieldValue(sources, [
+            'den_phong_khach', 'DenPhongKhach', 'DenKhach', 'den_khach', 'den1', 'Den1', 'lightLiving', 'Den'
+        ]);
+        if (rawLightLiving !== undefined) normalized.lightLiving = this.parseBoolean(rawLightLiving);
 
-        // 8. Giàn phơi
-        if (data.gian_phoi_che_do !== undefined) normalized.rackMode = data.gian_phoi_che_do;
-        if (data.gian_phoi_vi_tri !== undefined) normalized.rackPosition = data.gian_phoi_vi_tri;
+        // 8. ĐÈN PHÒNG BẾP
+        const rawLightKitchen = this.findFieldValue(sources, [
+            'den_phong_bep', 'DenPhongBep', 'DenBep', 'den_bep', 'den2', 'Den2', 'lightKitchen'
+        ]);
+        if (rawLightKitchen !== undefined) normalized.lightKitchen = this.parseBoolean(rawLightKitchen);
 
-        // 9. Đồng bộ thông tin người điều khiển gần nhất (User nào dùng chức năng gì)
-        if (data.nguoi_dieu_khien && window.AppCore && typeof window.AppCore.updateLastOperatorUI === 'function') {
-            window.AppCore.updateLastOperatorUI(data.nguoi_dieu_khien);
+        // 9. QUẠT BẾP
+        const rawFanKitchen = this.findFieldValue(sources, [
+            'quat_bep', 'QuatBep', 'quat', 'Quat', 'fanKitchen', 'fan', 'Fan'
+        ]);
+        if (rawFanKitchen !== undefined) normalized.fanKitchen = this.parseBoolean(rawFanKitchen);
+
+        // 10. ĐÈN PHÒNG NGỦ
+        const rawLightBedroom = this.findFieldValue(sources, [
+            'den_phong_ngu', 'DenPhongNgu', 'DenNgu', 'den_ngu', 'den3', 'Den3', 'lightBedroom'
+        ]);
+        if (rawLightBedroom !== undefined) normalized.lightBedroom = this.parseBoolean(rawLightBedroom);
+
+        // 11. CÒI BÁO ĐỘNG KHẨN CẤP
+        const rawAlarm = this.findFieldValue(sources, [
+            'coi_bao_dong', 'CoiBaoDong', 'coi', 'Coi', 'bao_dong', 'alarm', 'Alarm', 'Buzzer'
+        ]);
+        if (rawAlarm !== undefined) normalized.alarmActive = this.parseBoolean(rawAlarm);
+
+        // 12. GIÀN PHƠI
+        const rawRackMode = this.findFieldValue(sources, ['gian_phoi_che_do', 'GianPhoiCheDo', 'rackMode']);
+        if (rawRackMode !== undefined) normalized.rackMode = String(rawRackMode);
+
+        const rawRackPos = this.findFieldValue(sources, ['gian_phoi_vi_tri', 'GianPhoiViTri', 'rackPosition', 'GianPhoi']);
+        if (rawRackPos !== undefined) normalized.rackPosition = String(rawRackPos);
+
+        // 13. NGƯỜI ĐIỀU KHIỂN GẦN NHẤT
+        const rawOperator = this.findFieldValue(sources, ['nguoi_dieu_khien', 'NguoiDieuKhien', 'lastOperator']);
+        if (rawOperator && typeof rawOperator === 'object' && window.AppCore && typeof window.AppCore.updateLastOperatorUI === 'function') {
+            window.AppCore.updateLastOperatorUI(rawOperator);
         }
 
         callback(normalized);
@@ -223,39 +329,54 @@ const SmartHomeFirebase = {
         const actName = actionNames[action] || action;
         const timeFormatted = new Date().toLocaleTimeString('vi-VN') + ' - ' + new Date().toLocaleDateString('vi-VN');
 
-        // 1. Cập nhật duy nhất biến trạng thái thiết bị tương ứng
+        // 1. Cập nhật biến trạng thái thiết bị tương ứng (đồng bộ cả snake_case và PascalCase)
         switch (deviceId) {
             case 'door': {
                 const isLocked = (action === 'lock');
-                updates['cua_chinh'] = isLocked ? 0 : 90; // 0: Khóa, 90: Mở
+                const val = isLocked ? 0 : 90;
+                updates['cua_chinh'] = val;
+                updates['CuaChinh'] = val;
                 break;
             }
             case 'light_living': {
-                updates['den_phong_khach'] = (action === 'on');
+                const val = (action === 'on');
+                updates['den_phong_khach'] = val;
+                updates['DenPhongKhach'] = val;
                 break;
             }
             case 'light_kitchen': {
-                updates['den_phong_bep'] = (action === 'on');
+                const val = (action === 'on');
+                updates['den_phong_bep'] = val;
+                updates['DenPhongBep'] = val;
                 break;
             }
             case 'fan_kitchen': {
-                updates['quat_bep'] = (action === 'on');
+                const val = (action === 'on');
+                updates['quat_bep'] = val;
+                updates['QuatBep'] = val;
                 break;
             }
             case 'light_bedroom': {
-                updates['den_phong_ngu'] = (action === 'on');
+                const val = (action === 'on');
+                updates['den_phong_ngu'] = val;
+                updates['DenPhongNgu'] = val;
                 break;
             }
             case 'alarm': {
-                updates['coi_bao_dong'] = (action === 'on');
+                const val = (action === 'on');
+                updates['coi_bao_dong'] = val;
+                updates['CoiBaoDong'] = val;
                 break;
             }
             case 'rack_mode': {
                 updates['gian_phoi_che_do'] = action; // 'auto' | 'manual'
+                updates['GianPhoiCheDo'] = action;
                 break;
             }
             case 'rack': {
-                updates['gian_phoi_vi_tri'] = (action === 'extend') ? 'extended' : 'retracted';
+                const val = (action === 'extend') ? 'extended' : 'retracted';
+                updates['gian_phoi_vi_tri'] = val;
+                updates['GianPhoiViTri'] = val;
                 break;
             }
         }
@@ -359,19 +480,13 @@ const SmartHomeFirebase = {
 
     /**
      * Kiểm tra database khi khởi động:
-     * - Nếu còn nhánh smarthome cũ, tự động dọn dẹp để tối ưu
-     * - TUYỆT ĐỐI KHÔNG tự động tạo giá trị cảm biến mẫu (để rỗng chờ phần cứng gửi)
+     * - Kết nối an toàn, bảo toàn nguyên vẹn mọi trường dữ liệu người dùng đã tạo trong Firebase smarthome-75c59
+     * - TUYỆT ĐỐI KHÔNG tự động xóa hay ghi đè trường của người dùng
      */
     checkAndSeedDatabase: async function() {
         if (!this.db) return;
         try {
-            // Nếu phát hiện còn nhánh smarthome cũ, tự động dọn dẹp
-            const smarthomeSnap = await this.db.ref('smarthome').once('value');
-            if (smarthomeSnap.exists()) {
-                console.log("ℹ️ [Firebase] Phát hiện nhánh 'smarthome' cũ. Đang tự động dọn dẹp về cấu trúc tối ưu...");
-                await this.cleanupOldSmarthomeTree(true);
-            }
-            // Không tạo giá trị cảm biến mẫu: để rỗng để phần cứng vi xử lý gửi lên sau
+            console.log("ℹ️ [Firebase] Đang kết nối và lắng nghe dữ liệu từ smarthome-75c59. Bảo toàn nguyên vẹn mọi trường dữ liệu.");
         } catch (err) {
             console.warn("⚠️ [Firebase] Kiểm tra database:", err);
         }
