@@ -68,7 +68,10 @@ const AppCore = {
             thiet_bi: "Hệ Thống",
             thao_tac: "SẴN SÀNG",
             thoi_gian: "Hôm nay"
-        }
+        },
+
+        // Danh sách nhật ký thao tác thiết bị từ Cloud Firestore
+        firestoreLogs: []
     },
 
     pollingTimer: null,
@@ -104,6 +107,8 @@ const AppCore = {
             // Lắng nghe các thao tác bấm nút lưu trên Cloud Firestore
             if (typeof window.SmartHomeFirebase.listenToFirestoreDeviceLogs === 'function') {
                 window.SmartHomeFirebase.listenToFirestoreDeviceLogs((firestoreLogs) => {
+                    this.state.firestoreLogs = firestoreLogs || [];
+                    this.renderFirestoreLogs(this.state.firestoreLogs);
                     if (firestoreLogs && firestoreLogs.length > 0) {
                         const topLog = firestoreLogs[0];
                         if (topLog && topLog.message) {
@@ -260,6 +265,12 @@ const AppCore = {
             avatarEl.innerText = info.ten.charAt(0).toUpperCase();
             avatarEl.style.background = (info.vai_tro === 'admin') ? 'var(--accent-primary)' : '#059669';
         }
+
+        // Cập nhật card Người Điều Khiển mở rộng (Cloud Firestore) trên trang chủ
+        const opLastAction = document.getElementById('operatorSectionLastAction');
+        const opLastTime = document.getElementById('operatorSectionLastTime');
+        if (opLastAction) opLastAction.innerText = `Đã ${info.thao_tac} ${info.thiet_bi}`;
+        if (opLastTime) opLastTime.innerText = info.thoi_gian || '';
     },
 
     /**
@@ -578,6 +589,129 @@ const AppCore = {
             if (this.state.devices.alarmActive) btnAlarm.classList.add('active');
             else btnAlarm.classList.remove('active');
         }
+
+        // Render mục Người Điều Khiển & Lịch Sử Thao Tác Cloud Firestore
+        this.renderFirestoreLogs(this.state.firestoreLogs);
+    },
+
+    /**
+     * Render Mục Người Điều Khiển & Nhật Ký Thao Tác Cloud Firestore
+     * Collection: 'device_logs'
+     */
+    renderFirestoreLogs: function(logs) {
+        // 1. Cập nhật thẻ thông tin Người điều khiển (Operator Section)
+        const curUser = this.state.currentUser || { name: "Chủ hộ", role: "admin", relationship: "Gia đình" };
+        const opAvatar = document.getElementById('operatorSectionAvatar');
+        const opName = document.getElementById('operatorSectionName');
+        const opRoleTag = document.getElementById('operatorSectionRoleTag');
+        const opRelation = document.getElementById('operatorSectionRelation');
+        const permDoor = document.getElementById('permUnlockDoor');
+        const permAlarm = document.getElementById('permAlarm');
+        const opLastAction = document.getElementById('operatorSectionLastAction');
+        const opLastTime = document.getElementById('operatorSectionLastTime');
+
+        if (opName) opName.innerText = curUser.name || "Chủ hộ";
+        if (opAvatar) {
+            opAvatar.innerText = (curUser.name || "U").charAt(0).toUpperCase();
+            opAvatar.style.background = curUser.avatarColor || (curUser.role === 'admin' ? 'var(--accent-primary)' : '#059669');
+        }
+        if (opRoleTag) {
+            const isAdmin = (curUser.role === 'admin');
+            opRoleTag.className = `user-role-tag ${isAdmin ? 'admin' : 'user'}`;
+            opRoleTag.innerText = isAdmin ? 'Admin' : 'User';
+        }
+        if (opRelation) {
+            opRelation.innerText = curUser.relationship || (curUser.role === 'admin' ? 'Chủ hộ / Quản trị viên' : 'Thành viên gia đình');
+        }
+
+        // Quyền hạn
+        if (permDoor) {
+            const canDoor = (curUser.can_unlock_door !== false);
+            permDoor.className = canDoor ? "status-pill active" : "status-pill";
+            permDoor.innerHTML = canDoor ? '🔑 Mở Cửa (90°)' : '<span style="opacity:0.5;">🔒 Không Quyền Cửa</span>';
+        }
+        if (permAlarm) {
+            const canAlarm = (curUser.role === 'admin' || curUser.can_trigger_alarm === true);
+            permAlarm.className = canAlarm ? "status-pill active" : "status-pill";
+            permAlarm.innerHTML = canAlarm ? '🚨 Báo Động Khẩn' : '<span style="opacity:0.5;">🚫 Không Quyền Còi</span>';
+        }
+
+        // Thao tác gần nhất
+        if (this.state.lastOperator && this.state.lastOperator.ten && this.state.lastOperator.thiet_bi) {
+            if (opLastAction) {
+                opLastAction.innerText = `${this.state.lastOperator.ten}: ${this.state.lastOperator.thao_tac} ${this.state.lastOperator.thiet_bi}`;
+            }
+            if (opLastTime) {
+                opLastTime.innerText = this.state.lastOperator.thoi_gian || '';
+            }
+        } else if (logs && logs.length > 0 && logs[0]) {
+            const top = logs[0];
+            if (opLastAction) opLastAction.innerText = top.message || `${top.user_name}: ${top.action_label} ${top.device_name}`;
+            if (opLastTime) opLastTime.innerText = top.created_at_str || 'Vừa xong';
+        }
+
+        // 2. Render danh sách logs Cloud Firestore vào #firestoreLogsContainer
+        const container = document.getElementById('firestoreLogsContainer');
+        if (!container) return;
+
+        const logList = (logs && Array.isArray(logs)) ? logs : (this.state.firestoreLogs || []);
+        if (logList.length === 0) {
+            container.innerHTML = `
+                <div style="text-align:center; padding:1.75rem 1rem; color:var(--text-muted); font-size:0.825rem;">
+                    <div style="font-size:1.5rem; margin-bottom:6px;">☁️</div>
+                    <div style="font-weight:600;">Chưa có nhật ký ghi nhận trên Cloud Firestore.</div>
+                    <div style="font-size:0.75rem; margin-top:4px; opacity:0.8;">Mỗi khi có ai bật/tắt thiết bị hoặc mở khóa cửa, dữ liệu sẽ được lưu tự động tại collection <code>device_logs</code>!</div>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        logList.slice(0, 15).forEach((item) => {
+            const userName = item.user_name || "Chủ hộ";
+            const role = item.user_role || "user";
+            const isAdmin = (role === 'admin');
+            const devName = item.device_name || item.device_id || "Thiết bị";
+            const actLabel = item.action_label || item.action || "Thao tác";
+            let timeStr = item.created_at_str;
+            if (!timeStr && item.timestamp) {
+                try {
+                    timeStr = item.timestamp.toDate ? item.timestamp.toDate().toLocaleTimeString('vi-VN') : new Date(item.timestamp).toLocaleTimeString('vi-VN');
+                } catch(e) {
+                    timeStr = 'Vừa xong';
+                }
+            }
+            if (!timeStr) timeStr = 'Vừa xong';
+            
+            const isPositive = actLabel.includes('BẬT') || actLabel.includes('MỞ') || actLabel.includes('ĐĂNG NHẬP') || actLabel.includes('ĐƯA');
+            const isDanger = actLabel.includes('CÒI') || actLabel.includes('KHẨN CẤP') || actLabel.includes('XÓA');
+            const actionColor = isDanger ? 'var(--accent-red)' : (isPositive ? 'var(--accent-green)' : 'var(--accent-primary)');
+
+            html += `
+                <div class="card-widget-item" style="padding:0.7rem 0.85rem; margin-bottom:0.4rem; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                    <div style="display:flex; align-items:center; gap:9px; min-width:0;">
+                        <div class="user-avatar" style="width:30px; height:30px; font-size:0.8rem; font-weight:700; background:${isAdmin ? 'var(--accent-primary)' : '#059669'}; flex-shrink:0;">
+                            ${userName.charAt(0).toUpperCase()}
+                        </div>
+                        <div style="min-width:0;">
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <strong style="font-size:0.825rem; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${userName}</strong>
+                                <span class="user-role-tag ${isAdmin ? 'admin' : 'user'}" style="font-size:0.6rem; padding:0 4px;">${isAdmin ? 'Admin' : 'User'}</span>
+                            </div>
+                            <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:2px;">
+                                <span style="font-weight:700; color:${actionColor};">${actLabel}</span> ${devName}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align:right; flex-shrink:0;">
+                        <span class="firebase-badge" style="font-size:0.65rem; padding:2px 6px; display:inline-block; margin-bottom:2px;">🔥 Firestore</span>
+                        <div style="font-size:0.7rem; color:var(--text-muted);">${timeStr}</div>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
     },
 
     /**
@@ -966,6 +1100,9 @@ const AppCore = {
             this.state.currentUser = found;
             localStorage.setItem('smarthome_current_user', JSON.stringify(found));
             this.renderHeaderUserBadge();
+            if (typeof this.renderFirestoreLogs === 'function') {
+                this.renderFirestoreLogs(this.state.firestoreLogs);
+            }
             if (document.getElementById('usersPageMarker')) this.renderUsersPage();
             this.showToast(`Đã chuyển sang tài khoản: ${found.name} (${found.role === 'admin' ? 'Admin' : 'User'})`, "success");
         }

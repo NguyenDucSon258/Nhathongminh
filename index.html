@@ -326,7 +326,7 @@
                             </div>
                             <div>
                                 <h3 class="card-title">Phòng Khách</h3>
-                                <span class="card-subtitle">Khóa cửa Servo & Chiếu sáng</span>
+                                <span class="card-subtitle">Khóa cửa điện tử Servo 90°</span>
                             </div>
                         </div>
                         <a href="livingroom.html" class="card-action-link">Chi tiết &rarr;</a>
@@ -353,25 +353,9 @@
                         </div>
                     </div>
 
-                    <!-- Đèn phòng khách -->
-                    <div class="card-widget-item">
-                        <div class="control-row">
-                            <div class="control-info">
-                                <div class="control-icon">
-                                    <svg viewBox="0 0 24 24" stroke-width="2">
-                                        <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-7 7c0 2.5 1.5 4.5 3 6h8c1.5-1.5 3-3.5 3-6a7 7 0 0 0-7-7z"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <div class="control-name">Đèn Phòng Khách</div>
-                                    <div class="control-desc">Công tắc rơ-le chiếu sáng</div>
-                                </div>
-                            </div>
-                            <label class="cyber-switch">
-                                <input type="checkbox" id="ovSwitchLightLiving" onchange="AppCore.sendCommand('light_living', this.checked ? 'on' : 'off')">
-                                <span class="cyber-slider"></span>
-                            </label>
-                        </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto; padding-top:0.75rem; border-top:1px solid var(--card-border); font-size:0.75rem; color:var(--text-muted);">
+                        <span>Cơ cấu Servo: <strong>0° (Khóa) &bull; 90° (Mở)</strong></span>
+                        <a href="livingroom.html" style="color:var(--accent-primary); text-decoration:none; font-weight:600;">Xem Chi Tiết Phòng Khách &rarr;</a>
                     </div>
                 </div>
             </div>
@@ -515,41 +499,156 @@
         </div>
 
         <!-- ==================================================================
-             BẢNG CÔNG CỤ TEST GIẢ LẬP NHANH & NHẬT KÝ SỰ KIỆN
+             MỤC NGƯỜI ĐIỀU KHIỂN & LỊCH SỬ THAO TÁC CLOUD FIRESTORE
              ================================================================== -->
         <div class="dashboard-grid" style="margin-top:1.5rem;">
-            <div class="col-6">
-                <div class="card">
-                    <h3 class="card-title" style="margin-bottom:0.75rem;">⚡ Công Cụ Thử Nghiệm Mô Phỏng Tức Thì</h3>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                        <button class="btn-action" onclick="AppCore.state.sensors.gasKitchen = 580; AppCore.saveStateToStorage(); AppCore.renderCurrentPage();">
-                            🔥 Giả Lập Gas Bếp (>500PPM)
+            <!-- CỘT 1: THÔNG TIN NGƯỜI ĐIỀU KHIỂN HIỆN TẠI -->
+            <div class="col-5">
+                <div class="card" style="height:100%; display:flex; flex-direction:column;">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon" style="color:var(--accent-primary);">
+                                <svg viewBox="0 0 24 24" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Người Điều Khiển Hệ Thống</h3>
+                                <span class="card-subtitle">Đồng bộ Cloud Firestore & Realtime DB</span>
+                            </div>
+                        </div>
+                        <button class="btn-action" style="font-size:0.75rem; padding:0.35rem 0.65rem;" onclick="AppCore.openSwitchUserModal()" title="Đổi tài khoản người dùng">
+                            👤 Đổi User
                         </button>
-                        <button class="btn-action" onclick="AppCore.state.sensors.isRaining = !AppCore.state.sensors.isRaining; AppCore.saveStateToStorage(); AppCore.renderCurrentPage();">
-                            🌧️ Đổi Thời Tiết Mưa/Nắng
-                        </button>
-                        <button class="btn-action" onclick="AppCore.state.sensors.pirMotion = true; AppCore.saveStateToStorage(); AppCore.renderCurrentPage(); setTimeout(() => { AppCore.state.sensors.pirMotion = false; AppCore.renderCurrentPage(); }, 5000);">
-                            🚶 Giả Lập PIR Có Người
-                        </button>
-                        <button class="btn-action" onclick="SmartHomeFirebase.seedAllFields();">
-                            🔥 Đồng Bộ Lên Firebase
-                        </button>
-                        <button class="btn-action btn-danger" style="grid-column: 1 / -1; justify-content:center;" onclick="SmartHomeFirebase.cleanupOldSmarthomeTree();" title="Xóa bỏ vĩnh viễn nhánh 'smarthome' cồng kềnh cũ trên Firebase Realtime DB">
-                            🧹 Xóa Bỏ Nhánh 'smarthome' Cũ Trên Firebase
+                    </div>
+
+                    <!-- Thông tin chi tiết người dùng -->
+                    <div class="card-widget-item" style="margin-bottom:0.75rem;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div class="user-avatar" id="operatorSectionAvatar" style="width:46px; height:46px; font-size:1.2rem; font-weight:700; background:var(--accent-primary); flex-shrink:0;">A</div>
+                            <div style="flex:1; min-width:0;">
+                                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                                    <span class="user-name" id="operatorSectionName" style="font-size:1rem;">Nguyễn Văn An</span>
+                                    <span class="user-role-tag admin" id="operatorSectionRoleTag">Admin</span>
+                                </div>
+                                <div style="font-size:0.775rem; color:var(--text-muted); margin-top:2px;" id="operatorSectionRelation">Chủ hộ / Quản trị viên</div>
+                            </div>
+                        </div>
+
+                        <!-- Phân quyền người dùng -->
+                        <div style="display:flex; gap:6px; margin-top:0.75rem; padding-top:0.75rem; border-top:1px dashed var(--card-border); font-size:0.75rem;">
+                            <span id="permUnlockDoor" class="status-pill active" style="font-size:0.7rem; padding:2px 8px;">
+                                🔑 Mở Cửa (90°)
+                            </span>
+                            <span id="permAlarm" class="status-pill active" style="font-size:0.7rem; padding:2px 8px;">
+                                🚨 Báo Động Khẩn
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Thao tác gần nhất được ghi nhận -->
+                    <div class="card-widget-item" style="margin-bottom:0.75rem; background:rgba(37,99,235,0.03);">
+                        <div style="font-size:0.725rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.04em; margin-bottom:4px;">
+                            ⚡ Thao Tác Gần Nhất Ghi Nhận
+                        </div>
+                        <div style="font-size:0.875rem; font-weight:700; color:var(--accent-primary);" id="operatorSectionLastAction">
+                            Sẵn sàng nhận lệnh điều khiển
+                        </div>
+                        <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;" id="operatorSectionLastTime">
+                            --:--:--
+                        </div>
+                    </div>
+
+                    <!-- Nút thao tác nhanh -->
+                    <div style="margin-top:auto; display:flex; gap:8px; padding-top:0.5rem;">
+                        <a href="users.html" class="btn-action" style="flex:1; justify-content:center; text-decoration:none; font-size:0.8rem;">
+                            👨‍👩‍👧‍👦 Quản Lý Thành Viên &rarr;
+                        </a>
+                        <button class="btn-action" style="font-size:0.8rem;" onclick="SmartHomeFirebase.seedLeanDatabase()">
+                            🔄 Đồng Bộ
                         </button>
                     </div>
                 </div>
             </div>
 
-            <div class="col-6">
-                <div class="card">
-                    <h3 class="card-title" style="margin-bottom:0.75rem;">📋 Nhật Ký Hoạt Động (Activity Log)</h3>
-                    <div id="globalLogBox" style="height:100px; overflow-y:auto; font-family:monospace; font-size:0.75rem; color:var(--text-secondary); display:flex; flex-direction:column; gap:4px;">
-                        <div>[Hệ thống] Dashboard đã sẵn sàng.</div>
+            <!-- CỘT 2: LỊCH SỬ THAO TÁC CLOUD FIRESTORE -->
+            <div class="col-7">
+                <div class="card" style="height:100%; display:flex; flex-direction:column;">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon" style="color:#f97316;">
+                                <svg viewBox="0 0 24 24" stroke-width="2">
+                                    <path d="M12 2c1.1 0 2 .9 2 2 0 .74-.4 1.38-1 1.72V7h2a3 3 0 0 1 3 3v2.28c.6-.34 1-.98 1-1.72 0-1.1.9-2 2-2s2 .9 2 2c0 2.21-1.79 4-4 4h-2v2.28c.6-.34 1-.98 1-1.72 0-1.1.9-2 2-2s2 .9 2 2 0 4.42-3.58 8H7.58C4.02 20.56 2 17.5 2 13.5c0-1.1.9-2 2-2s2 .9 2 2c0 .74.4 1.38 1 1.72V13H5a3 3 0 0 1-3-3V7.72c-.6.34-1 .98-1 1.72 0 1.1-.9 2-2 2S0 10.54 0 9.44 1.79 5.44 4 5.44H6V5.72C5.4 5.38 5 4.74 5 4c0-1.1.9-2 2-2z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Nhật Ký Sử Dụng Thiết Bị (Cloud Firestore)</h3>
+                                <span class="card-subtitle">Lưu trữ trên collection: <code>device_logs</code></span>
+                            </div>
+                        </div>
+                        <span class="status-pill active" style="font-size:0.7rem; padding:3px 8px;">
+                            <span class="dot"></span>Real-time
+                        </span>
+                    </div>
+
+                    <!-- Container danh sách lịch sử Firestore -->
+                    <div id="firestoreLogsContainer" style="flex:1; max-height:245px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding-right:4px;">
+                        <div style="text-align:center; padding:1.5rem 1rem; color:var(--text-muted); font-size:0.825rem;">
+                            ⏳ Đang kết nối Cloud Firestore hoặc chưa có thao tác nào gần đây...
+                        </div>
+                    </div>
+
+                    <!-- Footer nhỏ chứa log kỹ thuật & công cụ test -->
+                    <div style="margin-top:auto; padding-top:0.75rem; border-top:1px solid var(--card-border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                        <span style="font-size:0.725rem; color:var(--text-muted);">
+                            🔥 Dữ liệu thời gian thực được đồng bộ tự động giữa các người dùng
+                        </span>
+                        <div style="display:flex; gap:6px;">
+                            <button class="btn-action" style="font-size:0.7rem; padding:0.3rem 0.6rem;" onclick="SmartHomeFirebase.seedAllFields()">
+                                Seed Dữ Liệu
+                            </button>
+                            <button class="btn-action btn-danger" style="font-size:0.7rem; padding:0.3rem 0.6rem;" onclick="SmartHomeFirebase.cleanupOldSmarthomeTree()" title="Xóa bỏ nhánh cũ">
+                                🧹 Dọn Nhánh Cũ
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- BẢNG CÔNG CỤ TEST GIẢ LẬP GỌN GÀNG & NHẬT KÝ BẢNG ĐIỀU KHIỂN -->
+        <details style="margin-top:0.75rem; font-size:0.75rem; color:var(--text-muted);">
+            <summary style="cursor:pointer; user-select:none; padding:4px 0;">🛠️ Bảng công cụ kiểm tra mô phỏng & Nhật ký console</summary>
+            <div class="dashboard-grid" style="margin-top:0.5rem;">
+                <div class="col-6">
+                    <div class="card" style="padding:0.75rem;">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+                            <button class="btn-action" style="font-size:0.75rem; padding:0.4rem;" onclick="AppCore.state.sensors.gasKitchen = 580; AppCore.saveStateToStorage(); AppCore.renderCurrentPage();">
+                                🔥 Giả Lập Gas (>500PPM)
+                            </button>
+                            <button class="btn-action" style="font-size:0.75rem; padding:0.4rem;" onclick="AppCore.state.sensors.isRaining = !AppCore.state.sensors.isRaining; AppCore.saveStateToStorage(); AppCore.renderCurrentPage();">
+                                🌧️ Đổi Mưa / Nắng
+                            </button>
+                            <button class="btn-action" style="font-size:0.75rem; padding:0.4rem;" onclick="AppCore.state.sensors.pirMotion = true; AppCore.saveStateToStorage(); AppCore.renderCurrentPage(); setTimeout(() => { AppCore.state.sensors.pirMotion = false; AppCore.renderCurrentPage(); }, 5000);">
+                                🚶 Cảm Biến PIR Có Người
+                            </button>
+                            <button class="btn-action" style="font-size:0.75rem; padding:0.4rem;" onclick="SmartHomeFirebase.seedAllFields();">
+                                🔥 Đồng Bộ Lên Firebase
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6">
+                    <div class="card" style="padding:0.75rem;">
+                        <div id="globalLogBox" style="height:70px; overflow-y:auto; font-family:monospace; font-size:0.72rem; color:var(--text-secondary); display:flex; flex-direction:column; gap:3px;">
+                            <div>[Hệ thống] Dashboard đã sẵn sàng.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </details>
     </div>
 
     <!-- Modal chuyển đổi tài khoản người dùng nhanh -->
