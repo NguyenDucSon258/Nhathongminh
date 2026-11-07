@@ -350,98 +350,56 @@ const SmartHomeFirebase = {
         const actName = actionNames[action] || action;
         const timeFormatted = new Date().toLocaleTimeString('vi-VN') + ' - ' + new Date().toLocaleDateString('vi-VN');
 
-        // 1. Cập nhật biến trạng thái thiết bị tương ứng (đồng bộ nhánh NhaThongMinhV1/DieuKhien và nhánh phẳng)
+        // 1. CHỈ CẬP NHẬT ĐÚNG CÁC TRƯỜNG CÓ SẴN TRONG CÂY DieuKhien CỦA PHẦN CỨNG!
+        // TUYỆT ĐỐI KHÔNG TỰ TẠO THÊM BẤT KỲ TRƯỜNG NÀO Ở CẤP ROOT!
         switch (deviceId) {
             case 'door': {
                 const isOpen = (action === 'unlock' || action === 'open' || action === 90);
-                const val = isOpen ? 90 : 0;
-                // Nhánh điều khiển phần cứng ESP32 NhaThongMinhV1
                 updates['NhaThongMinhV1/DieuKhien/MoCua'] = isOpen;
-                updates['MoCua'] = isOpen;
-                // Nhánh phẳng tương thích
-                updates['cua_chinh'] = val;
-                updates['CuaChinh'] = val;
                 break;
             }
             case 'light_living': {
-                const val = (action === 'on');
-                updates['NhaThongMinhV1/DieuKhien/DenKhach'] = val;
-                updates['DenKhach'] = val;
-                updates['den_phong_khach'] = val;
-                updates['DenPhongKhach'] = val;
+                updates['NhaThongMinhV1/DieuKhien/DenKhach'] = (action === 'on');
                 break;
             }
             case 'light_kitchen': {
-                const val = (action === 'on');
-                updates['NhaThongMinhV1/DieuKhien/DenBep'] = val;
-                updates['DenBep'] = val;
-                updates['den_phong_bep'] = val;
-                updates['DenPhongBep'] = val;
-                break;
-            }
-            case 'fan_kitchen': {
-                const val = (action === 'on');
-                updates['NhaThongMinhV1/DieuKhien/QuatBep'] = val;
-                updates['QuatBep'] = val;
-                updates['quat_bep'] = val;
+                updates['NhaThongMinhV1/DieuKhien/DenBep'] = (action === 'on');
                 break;
             }
             case 'light_bedroom': {
-                const val = (action === 'on');
-                updates['NhaThongMinhV1/DieuKhien/DenNgu'] = val;
-                updates['DenNgu'] = val;
-                updates['den_phong_ngu'] = val;
-                updates['DenPhongNgu'] = val;
-                break;
-            }
-            case 'alarm': {
-                const val = (action === 'on');
-                updates['NhaThongMinhV1/DieuKhien/CoiBaoDong'] = val;
-                updates['CoiBaoDong'] = val;
-                updates['coi_bao_dong'] = val;
+                updates['NhaThongMinhV1/DieuKhien/DenNgu'] = (action === 'on');
                 break;
             }
             case 'pir_mode':
             case 'pir': {
-                const val = (action === 'on' || action === true);
-                updates['NhaThongMinhV1/DieuKhien/CheDoPIR'] = val;
-                updates['CheDoPIR'] = val;
+                updates['NhaThongMinhV1/DieuKhien/CheDoPIR'] = (action === 'on' || action === true);
                 break;
             }
-            case 'rack_mode': {
-                updates['gian_phoi_che_do'] = action; // 'auto' | 'manual'
-                updates['GianPhoiCheDo'] = action;
+            default:
+                // Thiết bị không có trong phần cứng DieuKhien sẽ không ghi đè Realtime Database
                 break;
-            }
-            case 'rack': {
-                const val = (action === 'extend') ? 'extended' : 'retracted';
-                updates['gian_phoi_vi_tri'] = val;
-                updates['GianPhoiViTri'] = val;
-                break;
-            }
         }
 
-        // 2. Ghi nhận chính xác USER NÀO DÙNG CHỨC NĂNG GÌ vào Realtime Database
-        updates['nguoi_dieu_khien'] = {
-            ten: currentUser.name || "Chủ hộ",
-            vai_tro: currentUser.role || "user",
-            thiet_bi: devName,
-            thao_tac: actName,
-            thoi_gian: timeFormatted,
-            timestamp: timestamp
-        };
-
         try {
-            // Ghi vào Realtime Database cho ESP32 và các máy khác nhận ngay
-            await this.db.ref().update(updates);
-            console.log(`🔥 [Realtime DB Tinh Gọn] Đã cập nhật [${deviceId}]:`, updates);
-
-            // Cập nhật ngay trên giao diện nếu có hàm hiển thị
-            if (window.AppCore && typeof window.AppCore.updateLastOperatorUI === 'function') {
-                window.AppCore.updateLastOperatorUI(updates['nguoi_dieu_khien']);
+            // Chỉ gửi lên Firebase Realtime Database nếu có trường hợp lệ thuộc phần cứng
+            if (Object.keys(updates).length > 0) {
+                await this.db.ref().update(updates);
+                console.log(`🔥 [Firebase DieuKhien Sẵn Có] Đã cập nhật:`, updates);
             }
 
-            // Ghi bản ghi chi tiết vào Cloud Firestore (collection: 'device_logs')
+            // Cập nhật người thao tác trên bộ nhớ giao diện web (không ghi rác lên Realtime DB)
+            if (window.AppCore && typeof window.AppCore.updateLastOperatorUI === 'function') {
+                window.AppCore.updateLastOperatorUI({
+                    ten: currentUser.name || "Chủ hộ",
+                    vai_tro: currentUser.role || "user",
+                    thiet_bi: devName,
+                    thao_tac: actName,
+                    thoi_gian: timeFormatted,
+                    timestamp: timestamp
+                });
+            }
+
+            // Ghi lịch sử thao tác vào Cloud Firestore (collection: 'device_logs')
             await this.logDeviceActionToFirestore(deviceId, action, extra);
 
             return true;
@@ -453,9 +411,8 @@ const SmartHomeFirebase = {
     },
 
     /**
-     * DỌN DẸP / XÓA BỎ NHÁNH 'smarthome' CŨ TRÊN FIREBASE REALTIME DATABASE
-     * Đồng thời xóa sạch các thông số cảm biến giả lập để giữ nó rỗng
-     * Đợi vi xử lý phần cứng tự cập nhật lên sau
+     * DỌN DẸP / XÓA BỎ MỌI TRƯỜNG TỰ TẠO TRÊN FIREBASE REALTIME DATABASE
+     * Bảo toàn 100% chỉ giữ lại nhánh 'NhaThongMinhV1' sẵn có của phần cứng
      */
     cleanupOldSmarthomeTree: async function(silent = false) {
         if (!this.db) {
@@ -464,27 +421,32 @@ const SmartHomeFirebase = {
         }
 
         try {
-            // 1. Kiểm tra và xóa vĩnh viễn nhánh 'smarthome'
-            const smarthomeSnap = await this.db.ref('smarthome').once('value');
-            if (smarthomeSnap.exists()) {
-                console.log("🧹 [Firebase] Đang xóa nhánh 'smarthome' cồng kềnh khỏi Realtime Database...");
-                await this.db.ref('smarthome').remove();
-                console.log("✅ [Firebase] Đã xóa thành công nhánh 'smarthome'!");
+            const rootFieldsToRemove = [
+                'CoiBaoDong', 'coi_bao_dong', 'DenPhongKhach', 'den_phong_khach',
+                'DenPhongBep', 'den_phong_bep', 'DenPhongNgu', 'den_phong_ngu',
+                'cua_chinh', 'CuaChinh', 'MoCua', 'DenKhach', 'DenBep', 'DenNgu', 'CheDoPIR',
+                'nguoi_dieu_khien', 'gian_phoi_che_do', 'GianPhoiCheDo', 'gian_phoi_vi_tri',
+                'GianPhoiViTri', 'quat_bep', 'QuatBep', 'smarthome',
+                'nhiet_do', 'do_am', 'gas_phong_khach', 'gas_phong_bep', 'pir_phong_khach', 'cam_bien_mua',
+                'temp', 'hum', 'gasLiving', 'gasKitchen', 'pir', 'rain'
+            ];
+
+            for (const f of rootFieldsToRemove) {
+                try { await this.db.ref(f).remove(); } catch(e) {}
             }
 
-            // 2. Dọn sạch các trường dữ liệu cảm biến mẫu cũ (để rỗng hoàn toàn để phần cứng gửi lên)
-            await this.clearSensorDummyValues(true);
+            // Xóa trường tự tạo trong DieuKhien nếu có
+            try { await this.db.ref('NhaThongMinhV1/DieuKhien/CoiBaoDong').remove(); } catch(e) {}
+            try { await this.db.ref('NhaThongMinhV1/DieuKhien/QuatBep').remove(); } catch(e) {}
 
-            // 3. Khởi tạo trạng thái các công tắc thiết bị (đèn, cửa, giàn phơi)
-            await this.seedLeanDatabase(true);
-
+            console.log("🧹 [Firebase] Đã xóa hết các trường tự tạo, chỉ giữ đúng các trường sẵn có của phần cứng NhaThongMinhV1!");
             if (!silent && window.AppCore) {
-                window.AppCore.showToast("🧹 Đã dọn sạch Firebase: Xóa nhánh cũ và để rỗng cảm biến chờ phần cứng!", "success");
-                window.AppCore.addLog("Đã dọn dẹp Firebase: Nhánh cũ đã xóa, cảm biến để rỗng chờ phần cứng gửi lên.", "cmd");
+                window.AppCore.showToast("Đã dọn sạch mọi trường tự tạo, chỉ giữ lại các trường sẵn có!", "success");
+                window.AppCore.addLog("Đã xóa sạch trường tự tạo trên Firebase. Giữ nguyên 100% cấu trúc phần cứng.", "cmd");
             }
             return true;
         } catch (err) {
-            console.error("❌ [Firebase] Lỗi khi dọn dẹp nhánh smarthome:", err);
+            console.error("❌ [Firebase] Lỗi khi dọn dẹp:", err);
             if (!silent && window.AppCore) {
                 window.AppCore.showToast("Lỗi dọn dẹp Firebase: " + err.message, "error");
             }
@@ -493,97 +455,16 @@ const SmartHomeFirebase = {
     },
 
     /**
-     * Xóa các trường dữ liệu cảm biến mẫu trên Firebase để giữ nó rỗng
-     * Đợi vi xử lý phần cứng tự cập nhật lên sau
-     */
-    clearSensorDummyValues: async function(silent = false) {
-        if (!this.db) return false;
-        try {
-            const sensorFields = [
-                'nhiet_do', 'do_am', 'gas_phong_khach', 'gas_phong_bep', 
-                'pir_phong_khach', 'cam_bien_mua', 'temp', 'hum', 
-                'gasLiving', 'gasKitchen', 'pir', 'rain'
-            ];
-            for (const field of sensorFields) {
-                await this.db.ref(field).remove();
-            }
-            console.log("🧹 [Firebase] Đã dọn sạch các giá trị cảm biến mẫu, để rỗng để phần cứng gửi lên sau!");
-            if (!silent && window.AppCore) {
-                window.AppCore.showToast("Đã đưa các tham số cảm biến về rỗng, chờ vi xử lý cập nhật!", "success");
-            }
-            return true;
-        } catch (err) {
-            console.warn("⚠️ Lỗi khi xóa giá trị cảm biến:", err);
-            return false;
-        }
-    },
-
-    /**
-     * Kiểm tra database khi khởi động:
-     * - Kết nối an toàn, bảo toàn nguyên vẹn mọi trường dữ liệu người dùng đã tạo trong Firebase smarthome-75c59
-     * - TUYỆT ĐỐI KHÔNG tự động xóa hay ghi đè trường của người dùng
-     */
-    checkAndSeedDatabase: async function() {
-        if (!this.db) return;
-        try {
-            console.log("ℹ️ [Firebase] Đang kết nối và lắng nghe dữ liệu từ smarthome-75c59. Bảo toàn nguyên vẹn mọi trường dữ liệu.");
-        } catch (err) {
-            console.warn("⚠️ [Firebase] Kiểm tra database:", err);
-        }
-    },
-
-    /**
-     * Khởi tạo các công tắc thiết bị điều khiển ở cấp gốc
-     * CHỈ khởi tạo các thiết bị điều khiển (đèn, khóa cửa, giàn phơi, còi)
-     * KHÔNG tạo giá trị cảm biến mẫu, để nguyên cho phần cứng vi xử lý gửi lên sau
+     * Đồng bộ kết nối với Firebase - Bảo toàn 100% dữ liệu phần cứng sẵn có
+     * TUYỆT ĐỐI KHÔNG tự tạo hay ghi đè thêm trường mới nào!
      */
     seedLeanDatabase: async function(silent = false) {
         if (!this.db) return false;
-
-        const currentUser = (window.AppCore && window.AppCore.state && window.AppCore.state.currentUser) 
-            ? window.AppCore.state.currentUser 
-            : { name: "Nguyễn Văn An", role: "admin" };
-
-        const leanDeviceSchema = {
-            // Các thiết bị điều khiển trong nhà
-            "den_phong_khach": false,
-            "den_phong_bep": false,
-            "quat_bep": false,
-            "den_phong_ngu": false,
-            "cua_chinh": 0,                // 0 độ: Khóa, 90 độ: Mở
-            "gian_phoi_che_do": "auto",    // auto hoặc manual
-            "gian_phoi_vi_tri": "extended",// extended hoặc retracted
-            "coi_bao_dong": false,         // Còi hú khẩn cấp
-
-            // Đồng bộ trực tiếp nhánh phần cứng NhaThongMinhV1/DieuKhien
-            "NhaThongMinhV1/DieuKhien/MoCua": false,
-            "NhaThongMinhV1/DieuKhien/DenKhach": false,
-            "NhaThongMinhV1/DieuKhien/DenBep": false,
-            "NhaThongMinhV1/DieuKhien/DenNgu": false,
-            "NhaThongMinhV1/DieuKhien/CheDoPIR": true,
-
-            // Trường ghi nhận Người dùng nào đang sử dụng chức năng gì
-            "nguoi_dieu_khien": {
-                "ten": currentUser.name || "Nguyễn Văn An",
-                "vai_tro": currentUser.role || "admin",
-                "thiet_bi": "Hệ Thống Nhà Thông Minh",
-                "thao_tac": "SẴN SÀNG NHẬN DỮ LIỆU PHẦN CỨNG",
-                "thoi_gian": new Date().toLocaleTimeString('vi-VN') + ' - ' + new Date().toLocaleDateString('vi-VN'),
-                "timestamp": Date.now()
-            }
-        };
-
-        try {
-            await this.db.ref().update(leanDeviceSchema);
-            console.log("✅ [Firebase] Đã đồng bộ các công tắc thiết bị, để rỗng cảm biến cho phần cứng vi xử lý!");
-            if (!silent && window.AppCore) {
-                window.AppCore.showToast("Đã đồng bộ công tắc thiết bị (Cảm biến để rỗng chờ phần cứng)!", "success");
-            }
-            return true;
-        } catch (e) {
-            console.error("❌ [Firebase] Lỗi khi tạo dữ liệu tối ưu:", e);
-            return false;
+        console.log("ℹ️ [Firebase] Bảo toàn 100% các trường sẵn có trong NhaThongMinhV1.");
+        if (!silent && window.AppCore) {
+            window.AppCore.showToast("Đã đồng bộ với các trường phần cứng sẵn có trên Firebase!", "success");
         }
+        return true;
     },
 
     /**

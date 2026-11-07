@@ -624,6 +624,14 @@ const AppCore = {
             elBarGasKitchen.style.background = isGasDangerOverall ? 'var(--accent-red)' : 'var(--accent-green)';
         }
 
+        // Cập nhật huy hiệu Cảnh Báo Khí Gas (BaoDongGas)
+        const badgeGasAlarm = document.getElementById('ovGasAlarmBadge');
+        if (badgeGasAlarm) {
+            const isAlarm = Boolean(this.state.sensors.gasAlarm) || isGasDangerOverall;
+            badgeGasAlarm.innerText = isAlarm ? "⚠️ NGUY HIỂM" : "An Toàn";
+            badgeGasAlarm.className = isAlarm ? "status-pill offline" : "status-pill online";
+        }
+
         // Cập nhật trạng thái an toàn tổng quan (Mini spider card)
         const safetyGas = document.getElementById('ovSafetyGasStatus');
         if (safetyGas) {

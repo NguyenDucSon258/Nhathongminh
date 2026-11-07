@@ -431,7 +431,7 @@
                             </div>
                             <div>
                                 <h3 class="card-title">Phòng Bếp</h3>
-                                <span class="card-subtitle">Khí gas (KhiGas) & Hút mùi (QuatBep)</span>
+                                <span class="card-subtitle">Khí gas (KhiGas) & Chiếu sáng (DenBep)</span>
                             </div>
                         </div>
                     </div>
@@ -450,7 +450,10 @@
                     <!-- Đèn Bếp -->
                     <div class="card-widget-item">
                         <div class="control-row">
-                            <span style="font-size:0.85rem; font-weight:600;">Đèn Phòng Bếp</span>
+                            <div>
+                                <div style="font-size:0.85rem; font-weight:600;">Đèn Phòng Bếp</div>
+                                <div class="control-desc">Biến phần cứng: <code>DenBep</code></div>
+                            </div>
                             <label class="cyber-switch">
                                 <input type="checkbox" id="ovSwitchLightKitchen" onchange="AppCore.sendCommand('light_kitchen', this.checked ? 'on' : 'off')">
                                 <span class="cyber-slider"></span>
@@ -458,14 +461,14 @@
                         </div>
                     </div>
 
-                    <!-- Quạt Bếp -->
+                    <!-- Trạng thái Cảnh Báo Rò Rỉ Gas (BaoDongGas) -->
                     <div class="card-widget-item">
                         <div class="control-row">
-                            <span style="font-size:0.85rem; font-weight:600;">Quạt Hút Khói</span>
-                            <label class="cyber-switch">
-                                <input type="checkbox" id="ovSwitchFanKitchen" onchange="AppCore.sendCommand('fan_kitchen', this.checked ? 'on' : 'off')">
-                                <span class="cyber-slider"></span>
-                            </label>
+                            <div>
+                                <div style="font-size:0.85rem; font-weight:600;">Cảnh Báo Khí Gas</div>
+                                <div class="control-desc">Biến phần cứng: <code>BaoDongGas</code></div>
+                            </div>
+                            <span id="ovGasAlarmBadge" class="status-pill online">An Toàn</span>
                         </div>
                     </div>
                 </div>
