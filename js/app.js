@@ -481,35 +481,30 @@ const AppCore = {
     },
 
     /**
-     * Báo động chung & Còi hú Web Audio
+     * Báo động chung thị giác (Chỉ hiển thị cảnh báo trên màn hình, KHÔNG hú còi âm thanh)
      */
     renderGlobalAlarmStatus: function() {
         const gasVal = (this.state.sensors.gasKitchen !== null && this.state.sensors.gasKitchen !== undefined) 
             ? this.state.sensors.gasKitchen 
             : this.state.sensors.gasLiving;
         const isGasDanger = (gasVal !== null && gasVal !== undefined && gasVal >= this.state.thresholds.gasDangerPpm) || Boolean(this.state.sensors.gasAlarm);
-        const isHazard = isGasDanger || this.state.devices.alarmActive;
 
         const banner = document.getElementById('globalAlertBanner');
         const bannerTitle = document.getElementById('globalAlertTitle');
         const bannerDesc = document.getElementById('globalAlertDesc');
 
         if (banner) {
-            if (isHazard) {
+            if (isGasDanger && !this.state.alertDismissed) {
                 banner.classList.add('active');
-                if (isGasDanger) {
-                    if (bannerTitle) bannerTitle.innerText = "CẢNH BÁO RÒ RỈ KHÍ GAS NGUY HIỂM!";
-                    if (bannerDesc) bannerDesc.innerText = `Phát hiện nồng độ khí gas vượt ngưỡng (>400 PPM): ${gasVal || 3003} PPM. Cảnh báo rò rỉ rủi ro cao!`;
-                } else {
-                    if (bannerTitle) bannerTitle.innerText = "BÁO ĐỘNG SỰ CỐ KHẨN CẤP ĐANG BẬT!";
-                    if (bannerDesc) bannerDesc.innerText = "Hệ thống còi báo động khẩn cấp đang được kích hoạt từ phòng ngủ.";
-                }
-                this.startSiren();
-            } else {
+                if (bannerTitle) bannerTitle.innerText = "CẢNH BÁO RÒ RỈ KHÍ GAS NGUY HIỂM!";
+                if (bannerDesc) bannerDesc.innerText = `Phát hiện nồng độ khí gas vượt ngưỡng an toàn (>400 PPM): ${gasVal || 1595} PPM.`;
+            } else if (!isGasDanger) {
                 banner.classList.remove('active');
-                this.stopSiren();
+                this.state.alertDismissed = false;
             }
         }
+        // Đã tắt hoàn toàn còi hú âm thanh
+        this.stopSiren();
     },
 
     /**
@@ -670,9 +665,7 @@ const AppCore = {
         // Nút khẩn cấp
         const btnAlarm = document.getElementById('ovBtnAlarm');
         if (btnAlarm) {
-            btnAlarm.innerText = this.state.devices.alarmActive ? "TẮT BÁO ĐỘNG" : "BẬT CÒI KHẨN CẤP";
-            if (this.state.devices.alarmActive) btnAlarm.classList.add('active');
-            else btnAlarm.classList.remove('active');
+            btnAlarm.style.display = 'none';
         }
 
         // Render mục Người Điều Khiển & Lịch Sử Thao Tác Cloud Firestore
@@ -1033,30 +1026,8 @@ const AppCore = {
     },
 
     startSiren: function() {
-        try {
-            this.initAudioContext();
-            if (!this.audioContext || this.isSirenPlaying) return;
-            if (this.audioContext.state === 'suspended') this.audioContext.resume();
-
-            this.sirenOscillator = this.audioContext.createOscillator();
-            const gain = this.audioContext.createGain();
-
-            this.sirenOscillator.type = 'sawtooth';
-            const now = this.audioContext.currentTime;
-            this.sirenOscillator.frequency.setValueAtTime(600, now);
-
-            for (let i = 0; i < 40; i++) {
-                this.sirenOscillator.frequency.linearRampToValueAtTime(1200, now + (i * 0.8) + 0.4);
-                this.sirenOscillator.frequency.linearRampToValueAtTime(600, now + (i * 0.8) + 0.8);
-            }
-
-            gain.gain.setValueAtTime(0.12, now);
-            this.sirenOscillator.connect(gain);
-            gain.connect(this.audioContext.destination);
-
-            this.sirenOscillator.start();
-            this.isSirenPlaying = true;
-        } catch (e) {}
+        // Đã tắt hoàn toàn chế độ còi hú âm thanh - Chỉ hiển thị cảnh báo thị giác trên màn hình
+        this.stopSiren();
     },
 
     stopSiren: function() {
@@ -1070,18 +1041,19 @@ const AppCore = {
         }
     },
 
-    silenceAlarm: function() {
-        this.sendCommand('alarm', 'off');
-        if (this.state.sensors.gasLiving >= this.state.thresholds.gasDangerPpm) {
-            this.state.sensors.gasLiving = 150;
-        }
-        if (this.state.sensors.gasKitchen >= this.state.thresholds.gasDangerPpm) {
-            this.state.sensors.gasKitchen = 180;
-        }
+    /**
+     * Đóng thông báo cảnh báo thị giác
+     */
+    dismissAlert: function() {
+        this.state.alertDismissed = true;
+        const banner = document.getElementById('globalAlertBanner');
+        if (banner) banner.classList.remove('active');
         this.stopSiren();
-        this.saveStateToStorage();
-        this.renderCurrentPage();
-        this.showToast("Đã tắt còi báo động khẩn cấp!", "warn");
+        this.showToast("Đã đóng thông báo cảnh báo!", "info");
+    },
+
+    silenceAlarm: function() {
+        this.dismissAlert();
     },
 
     /**

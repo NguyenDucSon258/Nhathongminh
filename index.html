@@ -111,10 +111,10 @@
                 </div>
                 <div>
                     <h3 id="globalAlertTitle" style="font-size:0.95rem; font-weight:700; color:#fee2e2;">CẢNH BÁO SỰ CỐ KHẨN CẤP!</h3>
-                    <p id="globalAlertDesc" style="font-size:0.8rem; color:#fca5a5;">Phát hiện nồng độ gas nguy hiểm hoặc kích hoạt còi báo động.</p>
+                    <p id="globalAlertDesc" style="font-size:0.8rem; color:#fca5a5;">Phát hiện nồng độ khí gas nguy hiểm vượt ngưỡng an toàn.</p>
                 </div>
             </div>
-            <button class="btn-silence" onclick="AppCore.silenceAlarm()">Tắt Còi Hú</button>
+            <button class="btn-silence" onclick="AppCore.dismissAlert()">Đóng Cảnh Báo</button>
         </div>
 
         <!-- ==================================================================
@@ -528,15 +528,19 @@
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="card-title">Phòng Ngủ & Còi Báo</h3>
-                                <span class="card-subtitle">Chiếu sáng & Khẩn cấp</span>
+                                <h3 class="card-title">Phòng Ngủ</h3>
+                                <span class="card-subtitle">Chiếu sáng (DenNgu) & An toàn</span>
                             </div>
                         </div>
                     </div>
 
+                    <!-- Đèn phòng ngủ -->
                     <div class="card-widget-item">
                         <div class="control-row">
-                            <span style="font-size:0.85rem; font-weight:600;">Đèn Phòng Ngủ</span>
+                            <div>
+                                <div style="font-size:0.85rem; font-weight:600;">Đèn Phòng Ngủ</div>
+                                <div class="control-desc">Biến phần cứng: <code>DenNgu</code></div>
+                            </div>
                             <label class="cyber-switch">
                                 <input type="checkbox" id="ovSwitchLightBedroom" onchange="AppCore.sendCommand('light_bedroom', this.checked ? 'on' : 'off')">
                                 <span class="cyber-slider"></span>
@@ -544,13 +548,15 @@
                         </div>
                     </div>
 
-                    <div style="text-align:center; padding:1rem 0; margin-top:auto;">
-                        <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:10px;">
-                            Kích hoạt hệ thống còi hú báo động toàn bộ căn nhà
-                        </p>
-                        <button class="btn-action btn-danger" id="ovBtnAlarm" style="width:100%; justify-content:center; padding:0.75rem;" onclick="AppCore.sendCommand('alarm', AppCore.state.devices.alarmActive ? 'off' : 'on')">
-                            BẬT CÒI KHẨN CẤP
-                        </button>
+                    <!-- Chế độ cảnh báo an toàn hiển thị -->
+                    <div class="card-widget-item" style="margin-top:auto;">
+                        <div class="control-row">
+                            <div>
+                                <div style="font-size:0.8rem; font-weight:700;">Chế Độ Cảnh Báo</div>
+                                <div class="control-desc" style="font-size:0.72rem;">Chỉ hiển thị thị giác (Không hú còi)</div>
+                            </div>
+                            <span class="status-pill online" style="font-size:0.7rem; padding:2px 7px;">Thị Giác</span>
+                        </div>
                     </div>
                 </div>
             </div>
