@@ -270,7 +270,7 @@
                         </div>
                         <div style="background:var(--card-inner); padding:0.35rem 0.55rem; border-radius:8px; border:1px solid var(--card-border); font-size:0.72rem; display:flex; justify-content:space-between;">
                             <span style="color:var(--text-muted);">Cháy Nổ:</span>
-                            <span style="font-weight:700; color:var(--accent-green);">Bình Thường</span>
+                            <span id="ovSafetyFireStatus" style="font-weight:700; color:var(--accent-green);">Bình Thường</span>
                         </div>
                         <div style="background:var(--card-inner); padding:0.35rem 0.55rem; border-radius:8px; border:1px solid var(--card-border); font-size:0.72rem; display:flex; justify-content:space-between;">
                             <span style="color:var(--text-muted);">Mưa Bão:</span>
@@ -434,9 +434,9 @@
                 </div>
             </div>
 
-            <!-- HÀNG 3 - CỘT 1: PHÒNG BẾP (CHÁY NỔ & GAS) -->
+            <!-- HÀNG 3 - CỘT 1: PHÒNG BẾP (CHÁY NỔ, GAS & LỬA) -->
             <div class="col-4">
-                <div class="card">
+                <div class="card" style="height:100%; display:flex; flex-direction:column;">
                     <div class="card-header">
                         <div class="card-title-group">
                             <div class="card-icon" style="color:var(--accent-amber);">
@@ -449,7 +449,7 @@
                             </div>
                             <div>
                                 <h3 class="card-title">Phòng Bếp</h3>
-                                <span class="card-subtitle">Khí gas (KhiGas) & Chiếu sáng (DenBep)</span>
+                                <span class="card-subtitle">Gas (KhiGas), Lửa (BaoDongLua) & Đèn (DenBep)</span>
                             </div>
                         </div>
                     </div>
@@ -493,12 +493,26 @@
                             <span id="ovGasAlarmBadge" class="status-pill online">An Toàn</span>
                         </div>
                     </div>
+
+                    <!-- Trạng thái Cảnh Báo Lửa / Cháy (BaoDongLua) -->
+                    <div class="card-widget-item">
+                        <div class="control-row">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <div id="ovFireAlarmIcon" style="font-size:1.25rem; line-height:1;">🔥</div>
+                                <div>
+                                    <div style="font-size:0.85rem; font-weight:600;">Cảm Biến Lửa Phòng Bếp</div>
+                                    <div class="control-desc">Biến phần cứng: <code>BaoDongLua</code></div>
+                                </div>
+                            </div>
+                            <span id="ovFireAlarmBadge" class="status-pill online">An Toàn</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- HÀNG 3 - CỘT 2: SÂN PHƠI TỰ ĐỘNG -->
             <div class="col-4">
-                <div class="card">
+                <div class="card" style="height:100%; display:flex; flex-direction:column;">
                     <div class="card-header">
                         <div class="card-title-group">
                             <div class="card-icon" style="color:var(--accent-blue);">
@@ -512,29 +526,42 @@
                                 <span class="card-subtitle">Thời tiết & Giàn phơi đồ</span>
                             </div>
                         </div>
+                        <span id="ovRackBadge" class="status-pill online" style="font-size:0.75rem; padding:0.25rem 0.65rem;">Đang Phơi</span>
                     </div>
 
+                    <!-- Thời tiết cảm biến mưa -->
                     <div class="card-widget-item">
-                        <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
-                            <span style="color:var(--text-secondary);">Thời tiết:</span>
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem;">
+                            <span style="color:var(--text-secondary);">Thời tiết (Cảm biến mưa):</span>
                             <span id="ovWeatherStatus" style="font-weight:700; color:var(--accent-amber);">☀️ Khô ráo / Hửng nắng</span>
                         </div>
                     </div>
 
-                    <div class="card-widget-item">
-                        <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
-                            <span style="color:var(--text-secondary);">Vị trí giàn:</span>
-                            <span id="ovRackStatus" style="font-weight:700; color:var(--accent-green);">Đang vươn ra (Phơi)</span>
+                    <!-- Vị trí giàn phơi -->
+                    <div class="card-widget-item" style="margin-bottom:0.75rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem;">
+                            <div>
+                                <div style="color:var(--text-secondary); font-size:0.78rem;">Vị Trí Giàn Phơi:</div>
+                                <div id="ovRackStatus" style="font-weight:800; font-size:0.95rem; color:var(--accent-green); margin-top:2px;">Đang vươn ra (Phơi nắng)</div>
+                            </div>
+                            <div id="ovRackIcon" style="font-size:1.8rem; line-height:1;">☀️</div>
                         </div>
                     </div>
 
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:auto;">
-                        <button class="btn-action" style="justify-content:center;" onclick="AppCore.sendCommand('rack', 'retract')">
-                            Kéo Giàn Vào
-                        </button>
-                        <button class="btn-action" style="justify-content:center;" onclick="AppCore.sendCommand('rack', 'extend')">
-                            Đưa Giàn Ra
-                        </button>
+                    <!-- NÚT NHẤN ĐIỀU KHIỂN KÉO GIÀN VÀO / ĐƯA GIÀN RA -->
+                    <div style="margin-top:auto;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.03em; margin-bottom:6px;">
+                            <span>Nút Nhấn Điều Khiển:</span>
+                            <span style="font-family:monospace; font-weight:600;">GianPhoi</span>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                            <button type="button" class="btn-action" id="btnRackRetract" style="justify-content:center; padding:0.6rem 0.5rem; font-weight:700; font-size:0.82rem; border-radius:10px; transition:all 0.25s;" onclick="AppCore.sendCommand('rack', 'retract')" title="Bấm nút để kéo giàn phơi vào">
+                                📥 Kéo Giàn Vào
+                            </button>
+                            <button type="button" class="btn-action" id="btnRackExtend" style="justify-content:center; padding:0.6rem 0.5rem; font-weight:700; font-size:0.82rem; border-radius:10px; transition:all 0.25s;" onclick="AppCore.sendCommand('rack', 'extend')" title="Bấm nút để đưa giàn phơi ra ngoài">
+                                📤 Đưa Giàn Ra
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -712,7 +739,10 @@
                     <div class="card" style="padding:0.75rem;">
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
                             <button class="btn-action" style="font-size:0.75rem; padding:0.4rem;" onclick="AppCore.state.sensors.gasKitchen = 2450; AppCore.saveStateToStorage(); AppCore.renderCurrentPage();">
-                                🔥 Giả Lập Gas (>2000PPM)
+                                💨 Giả Lập Gas (>2000PPM)
+                            </button>
+                            <button class="btn-action" style="font-size:0.75rem; padding:0.4rem;" onclick="AppCore.state.sensors.fireAlarm = !AppCore.state.sensors.fireAlarm; AppCore.saveStateToStorage(); AppCore.renderCurrentPage();">
+                                🔥 Giả Lập Lửa (BaoDongLua)
                             </button>
                             <button class="btn-action" style="font-size:0.75rem; padding:0.4rem;" onclick="AppCore.state.sensors.isRaining = !AppCore.state.sensors.isRaining; AppCore.saveStateToStorage(); AppCore.renderCurrentPage();">
                                 🌧️ Đổi Mưa / Nắng

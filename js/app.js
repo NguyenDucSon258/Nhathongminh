@@ -22,6 +22,7 @@ const AppCore = {
             gasLiving: null,
             gasKitchen: null,
             gasAlarm: false,
+            fireAlarm: false,
             pirMotion: null,
             isRaining: null,
             rainIntensity: null
@@ -230,6 +231,9 @@ const AppCore = {
         }
         if (data.gasAlarm !== undefined) {
             this.state.sensors.gasAlarm = Boolean(data.gasAlarm);
+        }
+        if (data.fireAlarm !== undefined) {
+            this.state.sensors.fireAlarm = Boolean(data.fireAlarm);
         }
         if (data.pirMotion !== undefined) {
             this.state.sensors.pirMotion = (data.pirMotion !== null && data.pirMotion !== "") ? Boolean(data.pirMotion) : null;
@@ -488,17 +492,27 @@ const AppCore = {
             ? this.state.sensors.gasKitchen 
             : this.state.sensors.gasLiving;
         const isGasDanger = (gasVal !== null && gasVal !== undefined && gasVal > this.state.thresholds.gasDangerPpm) || Boolean(this.state.sensors.gasAlarm);
+        const isFireDanger = Boolean(this.state.sensors.fireAlarm);
+        const isDanger = isGasDanger || isFireDanger;
 
         const banner = document.getElementById('globalAlertBanner');
         const bannerTitle = document.getElementById('globalAlertTitle');
         const bannerDesc = document.getElementById('globalAlertDesc');
 
         if (banner) {
-            if (isGasDanger && !this.state.alertDismissed) {
+            if (isDanger && !this.state.alertDismissed) {
                 banner.classList.add('active');
-                if (bannerTitle) bannerTitle.innerText = "CẢNH BÁO RÒ RỈ KHÍ GAS NGUY HIỂM!";
-                if (bannerDesc) bannerDesc.innerText = `Phát hiện nồng độ khí gas vượt ngưỡng an toàn (>${this.state.thresholds.gasDangerPpm} PPM): ${gasVal} PPM.`;
-            } else if (!isGasDanger) {
+                if (isFireDanger && isGasDanger) {
+                    if (bannerTitle) bannerTitle.innerText = "🚨 KHẨN CẤP: PHÁT HIỆN LỬA VÀ RÒ RỈ GAS TẠI PHÒNG BẾP!";
+                    if (bannerDesc) bannerDesc.innerText = `Cảm biến lửa (BaoDongLua = true) và nồng độ khí gas nguy hiểm (${gasVal} PPM)!`;
+                } else if (isFireDanger) {
+                    if (bannerTitle) bannerTitle.innerText = "🔥 CẢNH BÁO KHẨN CẤP: PHÁT HIỆN NGỌN LỬA PHÒNG BẾP!";
+                    if (bannerDesc) bannerDesc.innerText = "Cảm biến ngọn lửa phòng bếp (BaoDongLua) đang kích hoạt cảnh báo nguy cơ cháy nổ!";
+                } else {
+                    if (bannerTitle) bannerTitle.innerText = "CẢNH BÁO RÒ RỈ KHÍ GAS NGUY HIỂM!";
+                    if (bannerDesc) bannerDesc.innerText = `Phát hiện nồng độ khí gas vượt ngưỡng an toàn (>${this.state.thresholds.gasDangerPpm} PPM): ${gasVal} PPM.`;
+                }
+            } else if (!isDanger) {
                 banner.classList.remove('active');
                 this.state.alertDismissed = false;
             }
@@ -690,6 +704,19 @@ const AppCore = {
             badgeGasAlarm.className = isAlarm ? "status-pill offline" : "status-pill online";
         }
 
+        // Cập nhật Cảnh Báo Lửa Phòng Bếp (BaoDongLua từ Firebase)
+        const isFire = Boolean(this.state.sensors.fireAlarm);
+        const badgeFireAlarm = document.getElementById('ovFireAlarmBadge');
+        const iconFireAlarm = document.getElementById('ovFireAlarmIcon');
+        if (badgeFireAlarm) {
+            badgeFireAlarm.innerText = isFire ? "🔥 CÓ LỬA (NGUY HIỂM)!" : "An Toàn";
+            badgeFireAlarm.className = isFire ? "status-pill offline" : "status-pill online";
+        }
+        if (iconFireAlarm) {
+            iconFireAlarm.style.transform = isFire ? "scale(1.25)" : "scale(1)";
+            iconFireAlarm.style.transition = "transform 0.3s ease";
+        }
+
         // Cập nhật trạng thái an toàn tổng quan (Mini spider card)
         const safetyGas = document.getElementById('ovSafetyGasStatus');
         if (safetyGas) {
@@ -704,25 +731,71 @@ const AppCore = {
                 safetyGas.style.color = "var(--accent-green)";
             }
         }
+        const safetyFire = document.getElementById('ovSafetyFireStatus');
+        if (safetyFire) {
+            safetyFire.innerText = isFire ? "🔥 Có Lửa!" : "Bình Thường";
+            safetyFire.style.color = isFire ? "var(--accent-red)" : "var(--accent-green)";
+        }
 
-        // Thời tiết & Giàn phơi
+        // Thời tiết & Giàn phơi (Sân phơi tự động)
         const elWeather = document.getElementById('ovWeatherStatus');
         const elRack = document.getElementById('ovRackStatus');
+        const ovRackBadge = document.getElementById('ovRackBadge');
+        const ovRackIcon = document.getElementById('ovRackIcon');
+        const btnRackRetract = document.getElementById('btnRackRetract');
+        const btnRackExtend = document.getElementById('btnRackExtend');
+
         if (elWeather) {
             if (this.state.sensors.isRaining === null) {
                 elWeather.innerText = "⏳ Chờ cảm biến mưa...";
                 elWeather.style.color = "var(--text-muted)";
             } else if (this.state.sensors.isRaining) {
-                elWeather.innerText = "🌧️ Đang có mưa";
+                elWeather.innerText = "🌧️ Đang có mưa (Tự thu giàn)";
                 elWeather.style.color = "var(--accent-blue)";
             } else {
                 elWeather.innerText = "☀️ Khô ráo / Hửng nắng";
                 elWeather.style.color = "var(--accent-amber)";
             }
         }
+
+        const isExtended = (this.state.devices.rackPosition === 'extended');
         if (elRack) {
-            elRack.innerText = (this.state.devices.rackPosition === 'extended') ? "Đang vươn ra (Phơi)" : "Đã thu vào an toàn";
-            elRack.style.color = (this.state.devices.rackPosition === 'extended') ? "var(--accent-green)" : "var(--accent-indigo)";
+            elRack.innerText = isExtended ? "Đang vươn ra (Phơi nắng)" : "Đã thu vào an toàn (Trong nhà)";
+            elRack.style.color = isExtended ? "var(--accent-green)" : "var(--accent-primary)";
+        }
+        if (ovRackBadge) {
+            ovRackBadge.innerText = isExtended ? "Đang Phơi" : "Đã Thu Vào";
+            ovRackBadge.className = isExtended ? "status-pill online" : "status-pill";
+        }
+        if (ovRackIcon) {
+            ovRackIcon.innerText = isExtended ? "☀️" : "🏠";
+        }
+
+        // Cập nhật trạng thái nút nhấn điều khiển giàn phơi
+        if (btnRackRetract && btnRackExtend) {
+            if (isExtended) {
+                // Đang đưa giàn ra (phơi) -> Nút "Đưa Giàn Ra" sáng rõ
+                btnRackExtend.style.background = "rgba(16, 185, 129, 0.15)";
+                btnRackExtend.style.borderColor = "var(--accent-green)";
+                btnRackExtend.style.color = "var(--accent-green)";
+                btnRackExtend.style.boxShadow = "0 0 0 1.5px rgba(16, 185, 129, 0.3)";
+
+                btnRackRetract.style.background = "var(--card-inner)";
+                btnRackRetract.style.borderColor = "var(--card-border)";
+                btnRackRetract.style.color = "var(--text-secondary)";
+                btnRackRetract.style.boxShadow = "none";
+            } else {
+                // Đang kéo giàn vào (trong nhà) -> Nút "Kéo Giàn Vào" sáng rõ
+                btnRackRetract.style.background = "rgba(37, 99, 235, 0.15)";
+                btnRackRetract.style.borderColor = "var(--accent-primary)";
+                btnRackRetract.style.color = "var(--accent-primary)";
+                btnRackRetract.style.boxShadow = "0 0 0 1.5px rgba(37, 99, 235, 0.3)";
+
+                btnRackExtend.style.background = "var(--card-inner)";
+                btnRackExtend.style.borderColor = "var(--card-border)";
+                btnRackExtend.style.color = "var(--text-secondary)";
+                btnRackExtend.style.boxShadow = "none";
+            }
         }
 
         // Nút khẩn cấp

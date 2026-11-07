@@ -226,6 +226,14 @@ const SmartHomeFirebase = {
             normalized.gasAlarm = this.parseBoolean(rawGasAlarm);
         }
 
+        // 3b. BÁO ĐỘNG LỬA / FLAME SENSOR PHÒNG BẾP (BaoDongLua, Bao_Dong_Lua, flame, fire,...)
+        const rawFireAlarm = this.findFieldValue(sources, [
+            'BaoDongLua', 'bao_dong_lua', 'Bao_Dong_Lua', 'BaoDongChay', 'FireAlarm', 'FlameAlarm', 'flame', 'fire'
+        ]);
+        if (rawFireAlarm !== undefined) {
+            normalized.fireAlarm = this.parseBoolean(rawFireAlarm);
+        }
+
         // 4. CẢM BIẾN CHUYỂN ĐỘNG & CHẾ ĐỘ PIR (CheDoPIR, PIR,...)
         const rawPir = this.findFieldValue(sources, [
             'pir_phong_khach', 'pir', 'PIR', 'Pir', 'ChuyenDong', 'chuyen_dong', 'motion', 'Motion'
@@ -291,12 +299,21 @@ const SmartHomeFirebase = {
         ]);
         if (rawAlarm !== undefined) normalized.alarmActive = this.parseBoolean(rawAlarm);
 
-        // 12. GIÀN PHƠI
+        // 12. GIÀN PHƠI (Sân phơi tự động)
         const rawRackMode = this.findFieldValue(sources, ['gian_phoi_che_do', 'GianPhoiCheDo', 'rackMode']);
         if (rawRackMode !== undefined) normalized.rackMode = String(rawRackMode);
 
-        const rawRackPos = this.findFieldValue(sources, ['gian_phoi_vi_tri', 'GianPhoiViTri', 'rackPosition', 'GianPhoi']);
-        if (rawRackPos !== undefined) normalized.rackPosition = String(rawRackPos);
+        const rawRackPos = this.findFieldValue(sources, ['GianPhoi', 'gian_phoi', 'Gian_Phoi', 'gian_phoi_vi_tri', 'GianPhoiViTri', 'rackPosition', 'rackPos']);
+        if (rawRackPos !== undefined) {
+            if (typeof rawRackPos === 'boolean') {
+                normalized.rackPosition = rawRackPos ? 'extended' : 'retracted';
+            } else if (typeof rawRackPos === 'string') {
+                const lower = rawRackPos.toLowerCase();
+                normalized.rackPosition = (lower.includes('ra') || lower.includes('extend') || lower === 'true') ? 'extended' : 'retracted';
+            } else {
+                normalized.rackPosition = String(rawRackPos);
+            }
+        }
 
         // 13. NGƯỜI ĐIỀU KHIỂN GẦN NHẤT
         const rawOperator = this.findFieldValue(sources, ['nguoi_dieu_khien', 'NguoiDieuKhien', 'lastOperator']);
@@ -373,6 +390,11 @@ const SmartHomeFirebase = {
             case 'pir_mode':
             case 'pir': {
                 updates['NhaThongMinhV1/DieuKhien/CheDoPIR'] = (action === 'on' || action === true);
+                break;
+            }
+            case 'rack': {
+                const isExtend = (action === 'extend' || action === 'ra' || action === true);
+                updates['NhaThongMinhV1/DieuKhien/GianPhoi'] = isExtend;
                 break;
             }
             default:
