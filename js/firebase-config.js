@@ -169,13 +169,18 @@ const SmartHomeFirebase = {
         if (!data) return;
         const normalized = {};
 
-        // Gom các nguồn tìm kiếm: Root data trước, sau đó tới các object con (smarthome, DHT, sensors,...)
-        const sources = [data];
-        for (const k of Object.keys(data)) {
-            if (data[k] && typeof data[k] === 'object' && !Array.isArray(data[k])) {
-                sources.push(data[k]);
+        // Gom tất cả các cấp object trong cây JSON (hỗ trợ mọi cấu trúc lồng nhau như NhaThongMinhV1 -> CamBien/DieuKhien)
+        const sources = [];
+        function collectSources(obj, depth = 0) {
+            if (!obj || typeof obj !== 'object' || depth > 5) return;
+            sources.push(obj);
+            for (const k of Object.keys(obj)) {
+                if (obj[k] && typeof obj[k] === 'object' && !Array.isArray(obj[k])) {
+                    collectSources(obj[k], depth + 1);
+                }
             }
         }
+        collectSources(data);
 
         // 1. NHIỆT ĐỘ (NhietDo, Nhiet_Do, nhiet_do, temp, temperature,...)
         const rawTemp = this.findFieldValue(sources, [
@@ -186,22 +191,23 @@ const SmartHomeFirebase = {
             normalized.temp = this.parseNumeric(rawTemp);
         }
 
-        // 2. ĐỘ ẨM (Doam, DoAm, Do_am, do_am, doam, hum, humidity,...)
+        // 2. ĐỘ ẨM (DoAm, Doam, Do_am, do_am, doam, hum, humidity,...)
         const rawHum = this.findFieldValue(sources, [
-            'Doam', 'DoAm', 'Do_am', 'do_am', 'doam', 'hum', 
+            'DoAm', 'Doam', 'Do_am', 'do_am', 'doam', 'hum', 
             'humidity', 'Humidity', 'DHT11_Doam', 'DHT_Doam'
         ]);
         if (rawHum !== undefined) {
             normalized.hum = this.parseNumeric(rawHum);
         }
 
-        // 3. KHÍ GAS MQ2 BẾP & PHÒNG KHÁCH
+        // 3. KHÍ GAS MQ2 (KhiGas, BaoDongGas, gas_phong_bep, GasBep, Gas,...)
         const rawGasKitchen = this.findFieldValue(sources, [
-            'gas_phong_bep', 'GasBep', 'Gas_Bep', 'gasKitchen', 'gas', 'Gas', 'MQ2', 'mq2', 'GasMQ2', 'KhiGas'
+            'KhiGas', 'Khi_Gas', 'khi_gas', 'khigas', 'gas_phong_bep', 'GasBep', 'Gas_Bep', 'gasKitchen', 'gas', 'Gas', 'MQ2', 'mq2', 'GasMQ2'
         ]);
         if (rawGasKitchen !== undefined) {
             const num = this.parseNumeric(rawGasKitchen);
             normalized.gasKitchen = (num !== null) ? parseInt(num) : null;
+            if (normalized.gasLiving === undefined) normalized.gasLiving = normalized.gasKitchen;
         }
 
         const rawGasLiving = this.findFieldValue(sources, [
@@ -210,9 +216,17 @@ const SmartHomeFirebase = {
         if (rawGasLiving !== undefined) {
             const num = this.parseNumeric(rawGasLiving);
             normalized.gasLiving = (num !== null) ? parseInt(num) : null;
+            if (normalized.gasKitchen === undefined) normalized.gasKitchen = normalized.gasLiving;
         }
 
-        // 4. CẢM BIẾN CHUYỂN ĐỘNG PIR
+        const rawGasAlarm = this.findFieldValue(sources, [
+            'BaoDongGas', 'bao_dong_gas', 'BaoDong', 'bao_dong'
+        ]);
+        if (rawGasAlarm !== undefined) {
+            normalized.gasAlarm = this.parseBoolean(rawGasAlarm);
+        }
+
+        // 4. CẢM BIẾN CHUYỂN ĐỘNG & CHẾ ĐỘ PIR (CheDoPIR, PIR,...)
         const rawPir = this.findFieldValue(sources, [
             'pir_phong_khach', 'pir', 'PIR', 'Pir', 'ChuyenDong', 'chuyen_dong', 'motion', 'Motion'
         ]);
@@ -220,53 +234,60 @@ const SmartHomeFirebase = {
             normalized.pirMotion = this.parseBoolean(rawPir);
         }
 
-        // 5. CẢM BIẾN MƯA
+        const rawPirMode = this.findFieldValue(sources, [
+            'CheDoPIR', 'che_do_pir', 'CheDo_PIR', 'pir_mode', 'pirMode'
+        ]);
+        if (rawPirMode !== undefined) {
+            normalized.pirMode = this.parseBoolean(rawPirMode);
+        }
+
+        // 5. CẢM BIẾN MƯA (TroiMua, Mua, cam_bien_mua, rain,...)
         const rawRain = this.findFieldValue(sources, [
-            'cam_bien_mua', 'CamBienMua', 'mua', 'Mua', 'rain', 'Rain', 'isRaining', 'is_raining'
+            'TroiMua', 'troi_mua', 'CamBienMua', 'cam_bien_mua', 'mua', 'Mua', 'rain', 'Rain', 'isRaining', 'is_raining'
         ]);
         if (rawRain !== undefined) {
             normalized.isRaining = this.parseBoolean(rawRain);
         }
 
-        // 6. CỬA CHÍNH (0/false/CLOSE: Khóa, 90/true/OPEN: Mở)
+        // 6. CỬA CHÍNH (MoCua: true = Mở, false = Khóa; 0/false: Khóa, 90/true: Mở)
         const rawDoor = this.findFieldValue(sources, [
-            'cua_chinh', 'CuaChinh', 'cua', 'Cua', 'door', 'Door', 'servo', 'Servo', 'KhoaCua'
+            'MoCua', 'mo_cua', 'Mo_Cua', 'mocua', 'cua_chinh', 'CuaChinh', 'cua', 'Cua', 'door', 'Door', 'servo', 'Servo', 'KhoaCua'
         ]);
         if (rawDoor !== undefined) {
-            if (rawDoor === 90 || rawDoor === true || rawDoor === '90' || String(rawDoor).toUpperCase() === 'OPEN') {
-                normalized.doorLocked = false; // Đang Mở
+            if (rawDoor === 90 || rawDoor === true || rawDoor === '90' || String(rawDoor).toUpperCase() === 'OPEN' || String(rawDoor).toUpperCase() === 'TRUE') {
+                normalized.doorLocked = false; // Đang Mở (Servo 90°)
             } else {
-                normalized.doorLocked = true; // Đang Đóng/Khóa
+                normalized.doorLocked = true; // Đang Đóng/Khóa (Servo 0°)
             }
         }
 
-        // 7. ĐÈN PHÒNG KHÁCH
+        // 7. ĐÈN PHÒNG KHÁCH (DenKhach, DenPhongKhach,...)
         const rawLightLiving = this.findFieldValue(sources, [
-            'den_phong_khach', 'DenPhongKhach', 'DenKhach', 'den_khach', 'den1', 'Den1', 'lightLiving', 'Den'
+            'DenKhach', 'den_khach', 'Den_Khach', 'denkhach', 'den_phong_khach', 'DenPhongKhach', 'den1', 'Den1', 'lightLiving', 'Den'
         ]);
         if (rawLightLiving !== undefined) normalized.lightLiving = this.parseBoolean(rawLightLiving);
 
-        // 8. ĐÈN PHÒNG BẾP
+        // 8. ĐÈN PHÒNG BẾP (DenBep, DenPhongBep,...)
         const rawLightKitchen = this.findFieldValue(sources, [
-            'den_phong_bep', 'DenPhongBep', 'DenBep', 'den_bep', 'den2', 'Den2', 'lightKitchen'
+            'DenBep', 'den_bep', 'Den_Bep', 'denbep', 'den_phong_bep', 'DenPhongBep', 'den2', 'Den2', 'lightKitchen'
         ]);
         if (rawLightKitchen !== undefined) normalized.lightKitchen = this.parseBoolean(rawLightKitchen);
 
-        // 9. QUẠT BẾP
+        // 9. QUẠT BẾP (QuatBep, quat,...)
         const rawFanKitchen = this.findFieldValue(sources, [
-            'quat_bep', 'QuatBep', 'quat', 'Quat', 'fanKitchen', 'fan', 'Fan'
+            'QuatBep', 'quat_bep', 'quat', 'Quat', 'fanKitchen', 'fan', 'Fan'
         ]);
         if (rawFanKitchen !== undefined) normalized.fanKitchen = this.parseBoolean(rawFanKitchen);
 
-        // 10. ĐÈN PHÒNG NGỦ
+        // 10. ĐÈN PHÒNG NGỦ (DenNgu, DenPhongNgu,...)
         const rawLightBedroom = this.findFieldValue(sources, [
-            'den_phong_ngu', 'DenPhongNgu', 'DenNgu', 'den_ngu', 'den3', 'Den3', 'lightBedroom'
+            'DenNgu', 'den_ngu', 'Den_Ngu', 'denngu', 'den_phong_ngu', 'DenPhongNgu', 'den3', 'Den3', 'lightBedroom'
         ]);
         if (rawLightBedroom !== undefined) normalized.lightBedroom = this.parseBoolean(rawLightBedroom);
 
-        // 11. CÒI BÁO ĐỘNG KHẨN CẤP
+        // 11. CÒI BÁO ĐỘNG KHẨN CẤP (CoiBaoDong,...)
         const rawAlarm = this.findFieldValue(sources, [
-            'coi_bao_dong', 'CoiBaoDong', 'coi', 'Coi', 'bao_dong', 'alarm', 'Alarm', 'Buzzer'
+            'CoiBaoDong', 'coi_bao_dong', 'coi', 'Coi', 'bao_dong', 'alarm', 'Alarm', 'Buzzer'
         ]);
         if (rawAlarm !== undefined) normalized.alarmActive = this.parseBoolean(rawAlarm);
 
@@ -329,43 +350,62 @@ const SmartHomeFirebase = {
         const actName = actionNames[action] || action;
         const timeFormatted = new Date().toLocaleTimeString('vi-VN') + ' - ' + new Date().toLocaleDateString('vi-VN');
 
-        // 1. Cập nhật biến trạng thái thiết bị tương ứng (đồng bộ cả snake_case và PascalCase)
+        // 1. Cập nhật biến trạng thái thiết bị tương ứng (đồng bộ nhánh NhaThongMinhV1/DieuKhien và nhánh phẳng)
         switch (deviceId) {
             case 'door': {
-                const isLocked = (action === 'lock');
-                const val = isLocked ? 0 : 90;
+                const isOpen = (action === 'unlock' || action === 'open' || action === 90);
+                const val = isOpen ? 90 : 0;
+                // Nhánh điều khiển phần cứng ESP32 NhaThongMinhV1
+                updates['NhaThongMinhV1/DieuKhien/MoCua'] = isOpen;
+                updates['MoCua'] = isOpen;
+                // Nhánh phẳng tương thích
                 updates['cua_chinh'] = val;
                 updates['CuaChinh'] = val;
                 break;
             }
             case 'light_living': {
                 const val = (action === 'on');
+                updates['NhaThongMinhV1/DieuKhien/DenKhach'] = val;
+                updates['DenKhach'] = val;
                 updates['den_phong_khach'] = val;
                 updates['DenPhongKhach'] = val;
                 break;
             }
             case 'light_kitchen': {
                 const val = (action === 'on');
+                updates['NhaThongMinhV1/DieuKhien/DenBep'] = val;
+                updates['DenBep'] = val;
                 updates['den_phong_bep'] = val;
                 updates['DenPhongBep'] = val;
                 break;
             }
             case 'fan_kitchen': {
                 const val = (action === 'on');
-                updates['quat_bep'] = val;
+                updates['NhaThongMinhV1/DieuKhien/QuatBep'] = val;
                 updates['QuatBep'] = val;
+                updates['quat_bep'] = val;
                 break;
             }
             case 'light_bedroom': {
                 const val = (action === 'on');
+                updates['NhaThongMinhV1/DieuKhien/DenNgu'] = val;
+                updates['DenNgu'] = val;
                 updates['den_phong_ngu'] = val;
                 updates['DenPhongNgu'] = val;
                 break;
             }
             case 'alarm': {
                 const val = (action === 'on');
-                updates['coi_bao_dong'] = val;
+                updates['NhaThongMinhV1/DieuKhien/CoiBaoDong'] = val;
                 updates['CoiBaoDong'] = val;
+                updates['coi_bao_dong'] = val;
+                break;
+            }
+            case 'pir_mode':
+            case 'pir': {
+                const val = (action === 'on' || action === true);
+                updates['NhaThongMinhV1/DieuKhien/CheDoPIR'] = val;
+                updates['CheDoPIR'] = val;
                 break;
             }
             case 'rack_mode': {
@@ -514,6 +554,13 @@ const SmartHomeFirebase = {
             "gian_phoi_che_do": "auto",    // auto hoặc manual
             "gian_phoi_vi_tri": "extended",// extended hoặc retracted
             "coi_bao_dong": false,         // Còi hú khẩn cấp
+
+            // Đồng bộ trực tiếp nhánh phần cứng NhaThongMinhV1/DieuKhien
+            "NhaThongMinhV1/DieuKhien/MoCua": false,
+            "NhaThongMinhV1/DieuKhien/DenKhach": false,
+            "NhaThongMinhV1/DieuKhien/DenBep": false,
+            "NhaThongMinhV1/DieuKhien/DenNgu": false,
+            "NhaThongMinhV1/DieuKhien/CheDoPIR": true,
 
             // Trường ghi nhận Người dùng nào đang sử dụng chức năng gì
             "nguoi_dieu_khien": {

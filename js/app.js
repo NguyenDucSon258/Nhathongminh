@@ -21,6 +21,7 @@ const AppCore = {
             tempMax: null,
             gasLiving: null,
             gasKitchen: null,
+            gasAlarm: false,
             pirMotion: null,
             isRaining: null,
             rainIntensity: null
@@ -34,9 +35,13 @@ const AppCore = {
             fanKitchen: false,
             lightBedroom: false,
             alarmActive: false,
+            pirMode: true,
             rackMode: 'auto',
             rackPosition: 'extended'
         },
+
+        // Mật khẩu mở cửa từ xa (PIN bảo mật)
+        doorPassword: localStorage.getItem('smarthome_door_pin') || "1234",
 
         // Ngưỡng cảnh báo
         thresholds: {
@@ -223,6 +228,9 @@ const AppCore = {
         if (data.gasKitchen !== undefined) {
             this.state.sensors.gasKitchen = (data.gasKitchen !== null && data.gasKitchen !== "" && !isNaN(data.gasKitchen)) ? parseInt(data.gasKitchen) : null;
         }
+        if (data.gasAlarm !== undefined) {
+            this.state.sensors.gasAlarm = Boolean(data.gasAlarm);
+        }
         if (data.pirMotion !== undefined) {
             this.state.sensors.pirMotion = (data.pirMotion !== null && data.pirMotion !== "") ? Boolean(data.pirMotion) : null;
         }
@@ -237,6 +245,7 @@ const AppCore = {
         if (data.fanKitchen !== undefined) this.state.devices.fanKitchen = Boolean(data.fanKitchen);
         if (data.lightBedroom !== undefined) this.state.devices.lightBedroom = Boolean(data.lightBedroom);
         if (data.alarmActive !== undefined) this.state.devices.alarmActive = Boolean(data.alarmActive);
+        if (data.pirMode !== undefined) this.state.devices.pirMode = Boolean(data.pirMode);
         if (data.rackMode !== undefined) this.state.devices.rackMode = data.rackMode;
         if (data.rackPosition !== undefined) this.state.devices.rackPosition = data.rackPosition;
         
@@ -345,6 +354,9 @@ const AppCore = {
                 break;
             case 'alarm':
                 this.state.devices.alarmActive = (action === 'on');
+                break;
+            case 'pir_mode':
+                this.state.devices.pirMode = (action === 'on' || action === true);
                 break;
             case 'rack_mode':
                 this.state.devices.rackMode = action; // 'auto' | 'manual'
@@ -472,9 +484,11 @@ const AppCore = {
      * Báo động chung & Còi hú Web Audio
      */
     renderGlobalAlarmStatus: function() {
-        const isGasLivingDanger = (this.state.sensors.gasLiving !== null) && (this.state.sensors.gasLiving >= this.state.thresholds.gasDangerPpm);
-        const isGasKitchenDanger = (this.state.sensors.gasKitchen !== null) && (this.state.sensors.gasKitchen >= this.state.thresholds.gasDangerPpm);
-        const isHazard = isGasLivingDanger || isGasKitchenDanger || this.state.devices.alarmActive;
+        const gasVal = (this.state.sensors.gasKitchen !== null && this.state.sensors.gasKitchen !== undefined) 
+            ? this.state.sensors.gasKitchen 
+            : this.state.sensors.gasLiving;
+        const isGasDanger = (gasVal !== null && gasVal !== undefined && gasVal >= this.state.thresholds.gasDangerPpm) || Boolean(this.state.sensors.gasAlarm);
+        const isHazard = isGasDanger || this.state.devices.alarmActive;
 
         const banner = document.getElementById('globalAlertBanner');
         const bannerTitle = document.getElementById('globalAlertTitle');
@@ -483,9 +497,9 @@ const AppCore = {
         if (banner) {
             if (isHazard) {
                 banner.classList.add('active');
-                if (isGasLivingDanger || isGasKitchenDanger) {
+                if (isGasDanger) {
                     if (bannerTitle) bannerTitle.innerText = "CẢNH BÁO RÒ RỈ KHÍ GAS NGUY HIỂM!";
-                    if (bannerDesc) bannerDesc.innerText = `Phát hiện nồng độ khí gas vượt ngưỡng (>400 PPM). Bếp: ${this.state.sensors.gasKitchen || 0} PPM, Khách: ${this.state.sensors.gasLiving || 0} PPM.`;
+                    if (bannerDesc) bannerDesc.innerText = `Phát hiện nồng độ khí gas vượt ngưỡng (>400 PPM): ${gasVal || 3003} PPM. Cảnh báo rò rỉ rủi ro cao!`;
                 } else {
                     if (bannerTitle) bannerTitle.innerText = "BÁO ĐỘNG SỰ CỐ KHẨN CẤP ĐANG BẬT!";
                     if (bannerDesc) bannerDesc.innerText = "Hệ thống còi báo động khẩn cấp đang được kích hoạt từ phòng ngủ.";
@@ -521,45 +535,108 @@ const AppCore = {
             donutCircle.style.strokeDashoffset = offset;
         }
 
-        // Cửa chính
+        // Cửa chính (MoCua) & Mật khẩu mở cửa từ xa
+        const isLocked = Boolean(this.state.devices.doorLocked);
         const elDoorState = document.getElementById('ovDoorState');
+        const elDoorIcon = document.getElementById('ovDoorIcon');
+        const ovDoorBadge = document.getElementById('ovDoorBadge');
+        const btnRemoteUnlock = document.getElementById('btnRemoteUnlock');
+        const btnQuickLock = document.getElementById('btnQuickLock');
+        const pwdWrap = document.getElementById('doorPasswordInputWrap');
         const btnDoor = document.getElementById('ovBtnDoor');
+
         if (elDoorState) {
-            elDoorState.innerText = this.state.devices.doorLocked ? "Đang Đóng (Khóa)" : "Đang Mở (Servo 90°)";
-            elDoorState.style.color = this.state.devices.doorLocked ? "var(--text-muted)" : "var(--accent-green)";
+            elDoorState.innerText = isLocked ? "Đang Đóng (Khóa 0°)" : "Đang Mở (Servo 90°)";
+            elDoorState.style.color = isLocked ? "var(--text-muted)" : "var(--accent-green)";
+        }
+        if (ovDoorBadge) {
+            ovDoorBadge.innerText = isLocked ? "🔒 Đang Khóa (0°)" : "🔓 Đang Mở (90°)";
+            ovDoorBadge.className = isLocked ? "status-pill" : "status-pill online";
+        }
+        if (elDoorIcon) {
+            if (isLocked) elDoorIcon.classList.remove('on');
+            else elDoorIcon.classList.add('on');
+        }
+        if (btnQuickLock) {
+            btnQuickLock.style.display = isLocked ? "none" : "flex";
+        }
+        if (pwdWrap) {
+            pwdWrap.style.display = isLocked ? "flex" : "none";
         }
         if (btnDoor) {
-            btnDoor.innerText = this.state.devices.doorLocked ? "Mở Khóa (90°)" : "Khóa Cửa (0°)";
+            btnDoor.innerText = isLocked ? "Mở Khóa (90°)" : "Khóa Cửa (0°)";
         }
 
-        // Đèn phòng khách
+        // Đèn phòng khách (DenKhach)
         const swLightLiving = document.getElementById('ovSwitchLightLiving');
-        if (swLightLiving) swLightLiving.checked = this.state.devices.lightLiving;
+        const iconLightLiving = document.getElementById('ovLightLivingIcon');
+        if (swLightLiving) swLightLiving.checked = Boolean(this.state.devices.lightLiving);
+        if (iconLightLiving) {
+            if (this.state.devices.lightLiving) iconLightLiving.classList.add('on');
+            else iconLightLiving.classList.remove('on');
+        }
 
-        // Đèn phòng bếp
+        // Chế độ tự động PIR (CheDoPIR) & Trạng thái phát hiện người
+        const swPirMode = document.getElementById('ovSwitchPirMode');
+        const badgePirMotion = document.getElementById('ovPirMotionBadge');
+        if (swPirMode) swPirMode.checked = (this.state.devices.pirMode !== false);
+        if (badgePirMotion) {
+            if (this.state.sensors.pirMotion === null) {
+                badgePirMotion.innerText = "Chờ dữ liệu...";
+                badgePirMotion.style.color = "var(--text-muted)";
+            } else if (this.state.sensors.pirMotion) {
+                badgePirMotion.innerText = "🚶 Có Người";
+                badgePirMotion.style.color = "var(--accent-green)";
+            } else {
+                badgePirMotion.innerText = "Không có người";
+                badgePirMotion.style.color = "var(--text-secondary)";
+            }
+        }
+
+        // Đèn phòng bếp (DenBep)
         const swLightKitchen = document.getElementById('ovSwitchLightKitchen');
         if (swLightKitchen) swLightKitchen.checked = this.state.devices.lightKitchen;
 
-        // Quạt bếp
+        // Quạt bếp (QuatBep)
         const swFanKitchen = document.getElementById('ovSwitchFanKitchen');
         if (swFanKitchen) swFanKitchen.checked = this.state.devices.fanKitchen;
 
-        // Đèn phòng ngủ
+        // Đèn phòng ngủ (DenNgu)
         const swLightBedroom = document.getElementById('ovSwitchLightBedroom');
         if (swLightBedroom) swLightBedroom.checked = this.state.devices.lightBedroom;
 
-        // Gas Bếp
+        // Gas Bếp (KhiGas)
         const elGasKitchen = document.getElementById('ovGasKitchen');
         const elBarGasKitchen = document.getElementById('ovBarGasKitchen');
-        const hasGasKitchen = (this.state.sensors.gasKitchen !== null && this.state.sensors.gasKitchen !== undefined);
+        const gasVal = (this.state.sensors.gasKitchen !== null && this.state.sensors.gasKitchen !== undefined) 
+            ? this.state.sensors.gasKitchen 
+            : this.state.sensors.gasLiving;
+        const hasGas = (gasVal !== null && gasVal !== undefined);
+        const isGasDangerOverall = hasGas && (gasVal >= this.state.thresholds.gasDangerPpm || Boolean(this.state.sensors.gasAlarm));
+
         if (elGasKitchen) {
-            elGasKitchen.innerText = hasGasKitchen ? `${this.state.sensors.gasKitchen} PPM` : "Chờ dữ liệu...";
-            elGasKitchen.style.color = (hasGasKitchen && this.state.sensors.gasKitchen >= this.state.thresholds.gasDangerPpm) ? 'var(--accent-red)' : 'var(--accent-green)';
+            elGasKitchen.innerText = hasGas ? `${gasVal} PPM ${isGasDangerOverall ? '⚠️ NGUY HIỂM' : '(An Toàn)'}` : "Chờ dữ liệu...";
+            elGasKitchen.style.color = isGasDangerOverall ? 'var(--accent-red)' : (hasGas ? 'var(--accent-green)' : 'var(--text-muted)');
         }
         if (elBarGasKitchen) {
-            const percent = hasGasKitchen ? Math.min(100, (this.state.sensors.gasKitchen / 700) * 100) : 0;
+            const percent = hasGas ? Math.min(100, Math.max(8, (gasVal / 1000) * 100)) : 0;
             elBarGasKitchen.style.width = percent + '%';
-            elBarGasKitchen.style.background = (hasGasKitchen && this.state.sensors.gasKitchen >= this.state.thresholds.gasDangerPpm) ? 'var(--accent-red)' : 'var(--accent-green)';
+            elBarGasKitchen.style.background = isGasDangerOverall ? 'var(--accent-red)' : 'var(--accent-green)';
+        }
+
+        // Cập nhật trạng thái an toàn tổng quan (Mini spider card)
+        const safetyGas = document.getElementById('ovSafetyGasStatus');
+        if (safetyGas) {
+            if (!hasGas) {
+                safetyGas.innerText = "Chờ Dữ Liệu";
+                safetyGas.style.color = "var(--text-muted)";
+            } else if (isGasDangerOverall) {
+                safetyGas.innerText = `Nguy Hiểm (${gasVal} PPM)`;
+                safetyGas.style.color = "var(--accent-red)";
+            } else {
+                safetyGas.innerText = `An Toàn (${gasVal} PPM)`;
+                safetyGas.style.color = "var(--accent-green)";
+            }
         }
 
         // Thời tiết & Giàn phơi
@@ -592,6 +669,114 @@ const AppCore = {
 
         // Render mục Người Điều Khiển & Lịch Sử Thao Tác Cloud Firestore
         this.renderFirestoreLogs(this.state.firestoreLogs);
+    },
+
+    /**
+     * Mở khóa cửa từ xa bằng mật khẩu xác thực PIN
+     */
+    remoteUnlockWithPassword: function() {
+        const input = document.getElementById('remoteDoorPasswordInput');
+        const msgEl = document.getElementById('doorPasswordMsg');
+        if (!input) return;
+
+        const enteredPin = input.value.trim();
+        const correctPin = this.state.doorPassword || localStorage.getItem('smarthome_door_pin') || "1234";
+
+        if (!enteredPin) {
+            if (msgEl) {
+                msgEl.innerText = "⚠️ Vui lòng nhập mã PIN mật khẩu để mở cửa!";
+                msgEl.style.color = "var(--accent-amber)";
+            }
+            this.showToast("Vui lòng nhập mã PIN mở cửa!", "warn");
+            input.focus();
+            return;
+        }
+
+        if (enteredPin === correctPin) {
+            if (msgEl) {
+                msgEl.innerText = "✅ Mật khẩu chính xác! Cửa chính đang mở (Servo 90°)...";
+                msgEl.style.color = "var(--accent-green)";
+            }
+            input.value = "";
+            this.sendCommand('door', 'unlock', { method: 'remote_password' });
+            this.showToast("🔓 Mật khẩu chính xác! Đã mở khóa cửa chính (Servo 90°)", "success");
+            this.renderOverviewPage();
+        } else {
+            if (msgEl) {
+                msgEl.innerText = "❌ Mật khẩu không chính xác! Vui lòng thử lại.";
+                msgEl.style.color = "var(--accent-red)";
+            }
+            this.showToast("❌ Sai mật khẩu mở cửa từ xa!", "error");
+            input.value = "";
+            input.focus();
+            input.style.borderColor = "var(--accent-red)";
+            setTimeout(() => { if (input) input.style.borderColor = ""; }, 1500);
+        }
+    },
+
+    /**
+     * Khóa cửa an toàn tức thì
+     */
+    quickLockDoor: function() {
+        const msgEl = document.getElementById('doorPasswordMsg');
+        this.sendCommand('door', 'lock');
+        if (msgEl) {
+            msgEl.innerText = "🔒 Đã khóa cửa an toàn (Servo 0°).";
+            msgEl.style.color = "var(--text-muted)";
+        }
+        this.showToast("🔒 Đã khóa cửa chính an toàn (0°)", "info");
+        this.renderOverviewPage();
+    },
+
+    /**
+     * Đổi mật khẩu mở cửa từ xa
+     */
+    promptChangeDoorPassword: function() {
+        const currentPin = this.state.doorPassword || localStorage.getItem('smarthome_door_pin') || "1234";
+        const oldPin = prompt("Nhập mã PIN mật khẩu hiện tại (Mặc định: 1234):");
+        if (oldPin === null) return;
+        if (oldPin.trim() !== currentPin) {
+            alert("❌ Mật khẩu hiện tại không chính xác!");
+            return;
+        }
+
+        const newPin = prompt("Nhập mã PIN mật khẩu mới (4 - 8 ký tự):");
+        if (newPin === null) return;
+        const trimmed = newPin.trim();
+        if (trimmed.length < 4) {
+            alert("⚠️ Mật khẩu mới phải có tối thiểu 4 ký tự!");
+            return;
+        }
+
+        this.state.doorPassword = trimmed;
+        localStorage.setItem('smarthome_door_pin', trimmed);
+        const msgEl = document.getElementById('doorPasswordMsg');
+        if (msgEl) {
+            msgEl.innerText = "🔑 Đã cập nhật mật khẩu mở cửa mới thành công!";
+            msgEl.style.color = "var(--accent-primary)";
+        }
+        this.showToast("Đã đổi mã PIN mở cửa từ xa thành công!", "success");
+    },
+
+    /**
+     * Bật / Tắt Khóa cửa có xác thực mật khẩu (dùng cho livingroom.html và các trang liên kết)
+     */
+    toggleDoorSecurity: function() {
+        if (!this.state.devices.doorLocked) {
+            this.quickLockDoor();
+            return;
+        }
+        const pin = prompt("Nhập mã PIN mật khẩu mở cửa từ xa (Mặc định: 1234):");
+        if (pin === null) return;
+        const correctPin = this.state.doorPassword || localStorage.getItem('smarthome_door_pin') || "1234";
+        if (pin.trim() === correctPin) {
+            this.sendCommand('door', 'unlock', { method: 'remote_password' });
+            this.showToast("🔓 Mật khẩu chính xác! Đã mở khóa cửa chính (Servo 90°)", "success");
+            this.renderCurrentPage();
+        } else {
+            alert("❌ Mật khẩu không chính xác!");
+            this.showToast("Sai mật khẩu mở cửa từ xa!", "error");
+        }
     },
 
     /**

@@ -258,7 +258,7 @@
                         </div>
                         <div style="background:var(--card-inner); padding:0.35rem 0.55rem; border-radius:8px; border:1px solid var(--card-border); font-size:0.72rem; display:flex; justify-content:space-between;">
                             <span style="color:var(--text-muted);">Khí Gas:</span>
-                            <span style="font-weight:700; color:var(--accent-primary);">An Toàn</span>
+                            <span id="ovSafetyGasStatus" style="font-weight:700; color:var(--accent-primary);">An Toàn</span>
                         </div>
                         <div style="background:var(--card-inner); padding:0.35rem 0.55rem; border-radius:8px; border:1px solid var(--card-border); font-size:0.72rem; display:flex; justify-content:space-between;">
                             <span style="color:var(--text-muted);">Cháy Nổ:</span>
@@ -272,68 +272,27 @@
                 </div>
             </div>
 
-            <!-- HÀNG 2 - CỘT 1 (CHIẾM 6 CỘT): BIỂU ĐỒ DAO ĐỘNG CẢM BIẾN -->
+            <!-- HÀNG 2 - CỘT 1: KHÓA CỬA ĐIỆN TỬ & MỞ CỬA TỪ XA BẰNG MẬT KHẨU -->
             <div class="col-6">
-                <div class="card">
+                <div class="card" style="height:100%; display:flex; flex-direction:column;">
                     <div class="card-header">
                         <div class="card-title-group">
-                            <div class="card-icon">
+                            <div class="card-icon" style="color:var(--accent-primary);">
                                 <svg viewBox="0 0 24 24" stroke-width="2">
-                                    <line x1="18" y1="20" x2="18" y2="10"></line>
-                                    <line x1="12" y1="20" x2="12" y2="4"></line>
-                                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="card-title">Mô Phỏng Biến Thiên Nhiệt Độ 24h</h3>
-                                <span class="card-subtitle">Thống kê các mốc thời gian trong ngày</span>
+                                <h3 class="card-title">Khóa Cửa Điện Tử (Mở Từ Xa)</h3>
+                                <span class="card-subtitle">Cơ cấu Servo 90° (MoCua) & Xác thực mã PIN</span>
                             </div>
                         </div>
-                        <span class="status-pill online" style="font-size:0.68rem; padding:0.25rem 0.6rem;">Chu Kỳ 24h</span>
+                        <span id="ovDoorBadge" class="status-pill" style="font-size:0.75rem; padding:0.25rem 0.65rem;">Đang Khóa (0°)</span>
                     </div>
 
-                    <!-- Biểu đồ cột mini style Inflow -->
-                    <div class="mini-bar-chart">
-                        <div class="bar-col"><div class="bar-pill" style="height:45%;"></div><span class="bar-label">00h</span></div>
-                        <div class="bar-col"><div class="bar-pill" style="height:35%;"></div><span class="bar-label">03h</span></div>
-                        <div class="bar-col"><div class="bar-pill" style="height:40%;"></div><span class="bar-label">06h</span></div>
-                        <div class="bar-col"><div class="bar-pill" style="height:65%;"></div><span class="bar-label">09h</span></div>
-                        <div class="bar-col active"><div class="bar-pill" style="height:88%;"></div><span class="bar-label">12h</span></div>
-                        <div class="bar-col active"><div class="bar-pill" style="height:92%;"></div><span class="bar-label">15h</span></div>
-                        <div class="bar-col"><div class="bar-pill" style="height:70%;"></div><span class="bar-label">18h</span></div>
-                        <div class="bar-col active"><div class="bar-pill" style="height:62%;"></div><span class="bar-label">21h</span></div>
-                    </div>
-
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.85rem; padding-top:0.65rem; border-top:1px solid var(--card-border); font-size:0.75rem; color:var(--text-muted);">
-                        <span>Thấp nhất: <strong style="color:var(--accent-primary);">24°C</strong> (03h)</span>
-                        <span>Trung bình: <strong style="color:var(--text-primary);">28.5°C</strong></span>
-                        <span>Đỉnh nhiệt: <strong style="color:#ef4444;">32°C</strong> (15h)</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- HÀNG 2 - CỘT 2 (CHIẾM 6 CỘT): PHÒNG KHÁCH NHANH -->
-            <div class="col-6">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title-group">
-                            <div class="card-icon">
-                                <svg viewBox="0 0 24 24" stroke-width="2">
-                                    <rect x="2" y="3" width="20" height="14" rx="2"></rect>
-                                    <line x1="8" y1="21" x2="16" y2="21"></line>
-                                    <line x1="12" y1="17" x2="12" y2="21"></line>
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 class="card-title">Phòng Khách</h3>
-                                <span class="card-subtitle">Khóa cửa điện tử Servo 90°</span>
-                            </div>
-                        </div>
-                        <a href="livingroom.html" class="card-action-link">Chi tiết &rarr;</a>
-                    </div>
-
-                    <!-- Khóa cửa Servo -->
-                    <div class="card-widget-item">
+                    <!-- Trạng thái Cửa Servo -->
+                    <div class="card-widget-item" style="margin-bottom:0.75rem;">
                         <div class="control-row">
                             <div class="control-info">
                                 <div class="control-icon" id="ovDoorIcon">
@@ -347,14 +306,111 @@
                                     <div class="control-desc" id="ovDoorState">Đang Đóng (Khóa 0°)</div>
                                 </div>
                             </div>
-                            <button class="btn-action" id="ovBtnDoor" onclick="AppCore.sendCommand('door', AppCore.state.devices.doorLocked ? 'unlock' : 'lock')">
-                                Mở Khóa (90°)
+                        </div>
+                    </div>
+
+                    <!-- MỤC NHẬP MẬT KHẨU MỞ CỬA TỪ XA -->
+                    <div class="card-widget-item" style="background:rgba(37,99,235,0.03); border:1px solid rgba(37,99,235,0.15); margin-bottom:0.75rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span style="font-size:0.75rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.04em;">
+                                🔐 Xác Thực Mật Khẩu Mở Cửa Từ Xa
+                            </span>
+                            <button type="button" class="btn-action" style="font-size:0.7rem; padding:2px 8px;" onclick="AppCore.promptChangeDoorPassword()" title="Bấm để đổi mật khẩu PIN">
+                                ⚙️ Đổi Mật Khẩu
                             </button>
+                        </div>
+
+                        <!-- Khung nhập mật khẩu khi cửa đang khóa -->
+                        <div id="doorPasswordInputWrap" style="display:flex; gap:8px;">
+                            <input type="password" id="remoteDoorPasswordInput" class="form-input" placeholder="Nhập mã PIN (Mặc định: 1234)" style="flex:1; font-size:0.95rem; letter-spacing:3px; text-align:center; padding:0.55rem; font-family:monospace;" maxlength="10" onkeydown="if(event.key==='Enter') AppCore.remoteUnlockWithPassword()">
+                            <button class="btn-action" id="btnRemoteUnlock" style="background:var(--accent-primary); color:#ffffff; font-weight:700; font-size:0.825rem; white-space:nowrap; padding:0.55rem 1.1rem; border-color:var(--accent-primary);" onclick="AppCore.remoteUnlockWithPassword()">
+                                🔓 Mở Khóa (90°)
+                            </button>
+                        </div>
+
+                        <!-- Nút khóa cửa nhanh khi cửa đang mở -->
+                        <button class="btn-action btn-danger" id="btnQuickLock" style="display:none; width:100%; font-weight:700; font-size:0.85rem; padding:0.6rem; justify-content:center;" onclick="AppCore.quickLockDoor()">
+                            🔒 Khóa Cửa Lại Ngay (Servo 0°)
+                        </button>
+
+                        <div id="doorPasswordMsg" style="font-size:0.75rem; margin-top:6px; min-height:18px; color:var(--text-muted);">
+                            Nhập đúng mã PIN bảo mật (mặc định: 1234) để kích hoạt Servo mở khóa 90°.
                         </div>
                     </div>
 
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto; padding-top:0.75rem; border-top:1px solid var(--card-border); font-size:0.75rem; color:var(--text-muted);">
                         <span>Cơ cấu Servo: <strong>0° (Khóa) &bull; 90° (Mở)</strong></span>
+                        <span>Trường Firebase: <code>MoCua</code></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HÀNG 2 - CỘT 2: PHÒNG KHÁCH (ĐÈN & CẢM BIẾN CHUYỂN ĐỘNG PIR) -->
+            <div class="col-6">
+                <div class="card" style="height:100%; display:flex; flex-direction:column;">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon" style="color:var(--accent-indigo);">
+                                <svg viewBox="0 0 24 24" stroke-width="2">
+                                    <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Phòng Khách</h3>
+                                <span class="card-subtitle">Chiếu sáng (DenKhach) & Chuyển động (CheDoPIR)</span>
+                            </div>
+                        </div>
+                        <a href="livingroom.html" class="card-action-link">Chi tiết &rarr;</a>
+                    </div>
+
+                    <!-- Đèn phòng khách -->
+                    <div class="card-widget-item">
+                        <div class="control-row">
+                            <div class="control-info">
+                                <div class="control-icon" id="ovLightLivingIcon">
+                                    <svg viewBox="0 0 24 24" stroke-width="2">
+                                        <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-7 7c0 2.5 1.5 4.5 3 6h8c1.5-1.5 3-3.5 3-6a7 7 0 0 0-7-7z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="control-name">Đèn Phòng Khách</div>
+                                    <div class="control-desc">Công tắc rơ-le (Biến: <code>DenKhach</code>)</div>
+                                </div>
+                            </div>
+                            <label class="cyber-switch">
+                                <input type="checkbox" id="ovSwitchLightLiving" onchange="AppCore.sendCommand('light_living', this.checked ? 'on' : 'off')">
+                                <span class="cyber-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Cảm biến PIR & Chế độ tự động -->
+                    <div class="card-widget-item">
+                        <div class="control-row">
+                            <div class="control-info">
+                                <div class="control-icon" style="color:var(--accent-amber);">
+                                    <svg viewBox="0 0 24 24" stroke-width="2">
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="9" cy="7" r="4"></circle>
+                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="control-name">Chế Độ Tự Động PIR</div>
+                                    <div class="control-desc">Tự bật đèn khi có người (<code>CheDoPIR</code>)</div>
+                                </div>
+                            </div>
+                            <label class="cyber-switch">
+                                <input type="checkbox" id="ovSwitchPirMode" onchange="AppCore.sendCommand('pir_mode', this.checked ? 'on' : 'off')">
+                                <span class="cyber-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto; padding-top:0.75rem; border-top:1px solid var(--card-border); font-size:0.75rem; color:var(--text-muted);">
+                        <span>Cảm biến PIR: <strong id="ovPirMotionBadge" style="color:var(--text-muted);">Chờ tín hiệu...</strong></span>
                         <a href="livingroom.html" style="color:var(--accent-primary); text-decoration:none; font-weight:600;">Xem Chi Tiết Phòng Khách &rarr;</a>
                     </div>
                 </div>
@@ -375,7 +431,7 @@
                             </div>
                             <div>
                                 <h3 class="card-title">Phòng Bếp</h3>
-                                <span class="card-subtitle">Khí gas MQ2 & Hút mùi</span>
+                                <span class="card-subtitle">Khí gas (KhiGas) & Hút mùi (QuatBep)</span>
                             </div>
                         </div>
                     </div>
@@ -383,7 +439,7 @@
                     <!-- Gas Bếp Meter -->
                     <div class="card-widget-item">
                         <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:6px;">
-                            <span style="color:var(--text-secondary);">Khí Gas MQ2 Bếp:</span>
+                            <span style="color:var(--text-secondary);">Khí Gas MQ2 (KhiGas):</span>
                             <span id="ovGasKitchen" style="font-weight:700; font-family:monospace; color:var(--text-muted);">Chờ dữ liệu...</span>
                         </div>
                         <div style="height:6px; background:rgba(255,255,255,0.08); border-radius:99px; overflow:hidden;">
