@@ -357,7 +357,7 @@
                     </div>
 
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto; padding-top:0.75rem; border-top:1px solid var(--card-border); font-size:0.75rem; color:var(--text-muted);">
-                        <span>Cơ cấu Servo: <strong>0° (Khóa) &bull; 90° (Mở)</strong></span>
+                        <span>Cơ cấu Servo: <strong> (Khóa) &bull; (Mở)</strong></span>
                         <span>Trường Firebase: <code>MoCua</code></span>
                     </div>
                 </div>
@@ -523,7 +523,7 @@
                             </div>
                             <div>
                                 <h3 class="card-title">Sân Phơi Tự Động</h3>
-                                <span class="card-subtitle">Thời tiết & Giàn phơi đồ</span>
+                                <span class="card-subtitle">Cảm biến mưa (TroiMua) & Servo giàn phơi</span>
                             </div>
                         </div>
                         <span id="ovRackBadge" class="status-pill online" style="font-size:0.75rem; padding:0.25rem 0.65rem;">Đang Phơi</span>
@@ -532,7 +532,7 @@
                     <!-- Thời tiết cảm biến mưa -->
                     <div class="card-widget-item">
                         <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem;">
-                            <span style="color:var(--text-secondary);">Thời tiết (Cảm biến mưa):</span>
+                            <span style="color:var(--text-secondary);">Trạng thái mưa (TroiMua):</span>
                             <span id="ovWeatherStatus" style="font-weight:700; color:var(--accent-amber);">☀️ Khô ráo / Hửng nắng</span>
                         </div>
                     </div>
@@ -542,23 +542,23 @@
                         <div id="ovRackIcon" style="font-size:1.8rem; line-height:1;">☀️</div>
                         <div style="flex:1;">
                             <div id="ovRackStatus" style="font-size:0.9rem; font-weight:800; color:var(--accent-green); letter-spacing:0.02em;">ĐANG VƯƠN RA (PHƠI NẮNG)</div>
-                            <div id="ovRackServoSub" style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">Động cơ Servo: 90° · Firebase: GianPhoi = true</div>
+                            <div id="ovRackServoSub" style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">Trường Firebase: TroiMua = false (Khô ráo)</div>
                         </div>
-                        <div id="ovRackStatusPill" style="font-size:0.68rem; font-weight:700; padding:3px 8px; border-radius:99px; background:rgba(16,185,129,0.15); color:var(--accent-green); border:1px solid rgba(16,185,129,0.35);">90° OUT</div>
+                        <div id="ovRackStatusPill" style="font-size:0.68rem; font-weight:700; padding:3px 8px; border-radius:99px; background:rgba(16,185,129,0.15); color:var(--accent-green); border:1px solid rgba(16,185,129,0.35);">PHƠI ĐỒ</div>
                     </div>
 
-                    <!-- NÚT NHẤN ĐIỀU KHIỂN SERVO KÉO GIÀN VÀO / ĐƯA GIÀN RA -->
+                    <!-- NÚT NHẤN ĐIỀU KHIỂN SERVO QUA TRƯỜNG CẢM BIẾN MƯA TROIMUA -->
                     <div style="margin-top:auto;">
                         <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.03em; margin-bottom:6px;">
-                            <span>Động Cơ Servo (Nút Nhấn):</span>
-                            <span style="font-family:monospace; font-weight:600;">GianPhoi (0° &bull; 90°)</span>
+                            <span>Điều Khiển Giàn Phơi:</span>
+                            <span style="font-family:monospace; font-weight:600;">TroiMua</span>
                         </div>
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                            <button type="button" class="btn-action" id="btnRackRetract" style="justify-content:center; padding:0.65rem 0.5rem; font-weight:700; font-size:0.82rem; border-radius:10px; transition:all 0.25s;" onclick="AppCore.controlRackServo('retract', 0)" title="Bấm nút để quay Servo 0° kéo giàn phơi vào">
-                                📥 Kéo Vào (0°)
+                            <button type="button" class="btn-action" id="btnRackRetract" style="justify-content:center; padding:0.65rem 0.5rem; font-weight:700; font-size:0.82rem; border-radius:10px; transition:all 0.25s;" onclick="AppCore.controlRackServo('retract', 0)" title="Bấm nút để đặt TroiMua = true (Báo mưa để Servo kéo giàn vào)">
+                                📥 Kéo Vào (Trời Mưa)
                             </button>
-                            <button type="button" class="btn-action" id="btnRackExtend" style="justify-content:center; padding:0.65rem 0.5rem; font-weight:700; font-size:0.82rem; border-radius:10px; transition:all 0.25s;" onclick="AppCore.controlRackServo('extend', 90)" title="Bấm nút để quay Servo 90° đưa giàn phơi ra">
-                                📤 Đưa Ra (90°)
+                            <button type="button" class="btn-action" id="btnRackExtend" style="justify-content:center; padding:0.65rem 0.5rem; font-weight:700; font-size:0.82rem; border-radius:10px; transition:all 0.25s;" onclick="AppCore.controlRackServo('extend', 90)" title="Bấm nút để đặt TroiMua = false (Nắng ráo để Servo đưa giàn ra)">
+                                📤 Đưa Ra (Hửng Nắng)
                             </button>
                         </div>
                     </div>

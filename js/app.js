@@ -240,6 +240,12 @@ const AppCore = {
         }
         if (data.isRaining !== undefined) {
             this.state.sensors.isRaining = (data.isRaining !== null && data.isRaining !== "") ? Boolean(data.isRaining) : null;
+            if (this.state.sensors.isRaining !== null) {
+                // Đồng bộ vị trí giàn phơi theo trường cảm biến TroiMua trên Firebase:
+                // TroiMua = true (Mưa) -> Tự động kéo giàn vào (retracted)
+                // TroiMua = false (Nắng) -> Đưa giàn ra ngoài phơi (extended)
+                this.state.devices.rackPosition = this.state.sensors.isRaining ? 'retracted' : 'extended';
+            }
         }
 
         // Thiết bị
@@ -366,7 +372,8 @@ const AppCore = {
                 this.state.devices.rackMode = action; // 'auto' | 'manual'
                 break;
             case 'rack':
-                this.state.devices.rackPosition = (action === 'extend') ? 'extended' : 'retracted';
+                this.state.devices.rackPosition = (action === 'extend' || action === 'ra' || action === true) ? 'extended' : 'retracted';
+                this.state.sensors.isRaining = (this.state.devices.rackPosition === 'retracted');
                 break;
         }
     },
@@ -783,8 +790,8 @@ const AppCore = {
         }
         if (ovRackServoSub) {
             ovRackServoSub.innerText = isExtended 
-                ? "Động cơ Servo: 90° (Vươn ra) · Firebase: GianPhoi = true (90°)" 
-                : "Động cơ Servo: 0° (Thu vào) · Firebase: GianPhoi = false (0°)";
+                ? "Động cơ Servo: 90° (Vươn ra) · Firebase: TroiMua = false (Khô ráo)" 
+                : "Động cơ Servo: 0° (Thu vào) · Firebase: TroiMua = true (Mưa)";
         }
         if (ovRackStatusPill) {
             ovRackStatusPill.innerText = isExtended ? "90° OUT" : "0° IN";
@@ -997,7 +1004,9 @@ const AppCore = {
         const isExtend = (action === 'extend' || action === 'ra' || action === true || action === 90 || action === 180);
         const angle = (typeof targetAngle === 'number') ? targetAngle : (isExtend ? 90 : 0);
         this.sendCommand('rack', isExtend ? 'extend' : 'retract', { angle: angle });
-        this.showToast(isExtend ? `☀️ Động cơ Servo: Đang đưa giàn ra (${angle}°) đón nắng!` : `🏠 Động cơ Servo: Đang kéo giàn vào (${angle}°) nhà an toàn!`, 'info');
+        this.showToast(isExtend 
+            ? "☀️ Đã đặt TroiMua = false (Khô ráo): Điều khiển Servo đưa giàn ra phơi!" 
+            : "🌧️ Đã đặt TroiMua = true (Mưa): Điều khiển Servo kéo giàn vào nhà!", 'info');
         this.renderOverviewPage();
     },
 

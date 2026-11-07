@@ -76,8 +76,8 @@ const SmartHomeFirebase = {
             // Bắt đầu lắng nghe dữ liệu cảm biến thời gian thực (NhietDo, Doam,...)
             this.listenToAllNodes(onDataCallback);
 
-            // Kiểm tra database khi kết nối
-            this.checkAndSeedDatabase();
+            // Dọn sạch mọi trường tự tạo dư thừa trong DieuKhien khi khởi động
+            this.cleanupOldSmarthomeTree(true);
 
             return true;
         } catch (error) {
@@ -367,8 +367,10 @@ const SmartHomeFirebase = {
         const actName = actionNames[action] || action;
         const timeFormatted = new Date().toLocaleTimeString('vi-VN') + ' - ' + new Date().toLocaleDateString('vi-VN');
 
-        // 1. CHỈ CẬP NHẬT ĐÚNG CÁC TRƯỜNG CÓ SẴN TRONG CÂY DieuKhien CỦA PHẦN CỨNG!
-        // TUYỆT ĐỐI KHÔNG TỰ TẠO THÊM BẤT KỲ TRƯỜNG NÀO Ở CẤP ROOT!
+        // 1. CHỈ CẬP NHẬT ĐÚNG CÁC TRƯỜNG CÓ SẴN CỦA PHẦN CỨNG!
+        // Trong DieuKhien CHỈ CÓ ĐÚNG 5 TRƯỜNG: CheDoPIR, DenBep, DenKhach, DenNgu, MoCua.
+        // Điều khiển giàn phơi: Cập nhật trường cảm biến mưa CamBien/TroiMua (true: mưa -> thu vào; false: khô ráo -> đưa ra).
+        // TUYỆT ĐỐI KHÔNG TỰ TẠO THÊM BẤT KỲ TRƯỜNG NÀO TRONG DIEUKHIEN HOẶC ROOT!
         switch (deviceId) {
             case 'door': {
                 const isOpen = (action === 'unlock' || action === 'open' || action === 90);
@@ -393,19 +395,16 @@ const SmartHomeFirebase = {
                 break;
             }
             case 'alarm': {
-                const isAlarm = (action === 'on' || action === true);
-                updates['NhaThongMinhV1/DieuKhien/CoiBaoDong'] = isAlarm;
-                updates['NhaThongMinhV1/DieuKhien/BaoDong'] = isAlarm;
+                // Còi báo động phát qua Web Audio API trên trình duyệt, không ghi trường lạ vào DieuKhien
                 break;
             }
             case 'rack': {
                 const isExtend = (action === 'extend' || action === 'ra' || action === true || action === 90 || action === 180);
-                const angle = (extra && typeof extra.angle === 'number') ? extra.angle : (isExtend ? 90 : 0);
-                // Cập nhật cả GianPhoi và gianphoi (chữ thường) để khớp 100% với code vi xử lý
-                updates['NhaThongMinhV1/DieuKhien/GianPhoi'] = isExtend;
-                updates['NhaThongMinhV1/DieuKhien/gianphoi'] = isExtend;
-                // Cập nhật góc số nguyên để MCU đọc trực tiếp servo.write(angle)
-                updates['NhaThongMinhV1/DieuKhien/GocGianPhoi'] = angle;
+                // Vi xử lý điều khiển động cơ servo giàn phơi theo trường cảm biến CamBien/TroiMua:
+                // - Đưa giàn ra ngoài phơi: CamBien/TroiMua = false (Không mưa -> Servo vươn ra 90°)
+                // - Kéo giàn vào trong nhà: CamBien/TroiMua = true (Có mưa -> Servo thu vào 0°)
+                const isRaining = !isExtend;
+                updates['NhaThongMinhV1/CamBien/TroiMua'] = isRaining;
                 break;
             }
             default:
@@ -468,11 +467,13 @@ const SmartHomeFirebase = {
                 try { await this.db.ref(f).remove(); } catch(e) {}
             }
 
-            // Xóa trường tự tạo trong DieuKhien nếu có
-            try { await this.db.ref('NhaThongMinhV1/DieuKhien/CoiBaoDong').remove(); } catch(e) {}
-            try { await this.db.ref('NhaThongMinhV1/DieuKhien/QuatBep').remove(); } catch(e) {}
+            // Xóa triệt để mọi trường tự tạo dư thừa trong DieuKhien (CHỈ GIỮ LẠI ĐÚNG 5 TRƯỜNG CHUẨN: CheDoPIR, DenBep, DenKhach, DenNgu, MoCua)
+            const dieuKhienJunk = ['GianPhoi', 'gianphoi', 'GocGianPhoi', 'TroiMua', 'troi_mua', 'CoiBaoDong', 'coi_bao_dong', 'BaoDong', 'bao_dong', 'QuatBep', 'quat_bep'];
+            for (const item of dieuKhienJunk) {
+                try { await this.db.ref('NhaThongMinhV1/DieuKhien/' + item).remove(); } catch(e) {}
+            }
 
-            console.log("🧹 [Firebase] Đã xóa hết các trường tự tạo, chỉ giữ đúng các trường sẵn có của phần cứng NhaThongMinhV1!");
+            console.log("🧹 [Firebase] Đã dọn sạch mọi trường tự tạo, chỉ giữ đúng 5 trường sẵn có trong DieuKhien (CheDoPIR, DenBep, DenKhach, DenNgu, MoCua)!");
             if (!silent && window.AppCore) {
                 window.AppCore.showToast("Đã dọn sạch mọi trường tự tạo, chỉ giữ lại các trường sẵn có!", "success");
                 window.AppCore.addLog("Đã xóa sạch trường tự tạo trên Firebase. Giữ nguyên 100% cấu trúc phần cứng.", "cmd");
