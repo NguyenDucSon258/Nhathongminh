@@ -303,7 +303,7 @@ const SmartHomeFirebase = {
         const rawRackMode = this.findFieldValue(sources, ['gian_phoi_che_do', 'GianPhoiCheDo', 'rackMode']);
         if (rawRackMode !== undefined) normalized.rackMode = String(rawRackMode);
 
-        const rawRackPos = this.findFieldValue(sources, ['GianPhoi', 'gian_phoi', 'Gian_Phoi', 'gian_phoi_vi_tri', 'GianPhoiViTri', 'rackPosition', 'rackPos']);
+        const rawRackPos = this.findFieldValue(sources, ['gianphoi', 'GianPhoi', 'GocGianPhoi', 'gian_phoi', 'Gian_Phoi', 'gian_phoi_vi_tri', 'GianPhoiViTri', 'rackPosition', 'rackPos']);
         if (rawRackPos !== undefined) {
             if (typeof rawRackPos === 'boolean') {
                 normalized.rackPosition = rawRackPos ? 'extended' : 'retracted';
@@ -395,8 +395,9 @@ const SmartHomeFirebase = {
             case 'rack': {
                 const isExtend = (action === 'extend' || action === 'ra' || action === true || action === 90 || action === 180);
                 const angle = (extra && typeof extra.angle === 'number') ? extra.angle : (isExtend ? 90 : 0);
-                // Cập nhật boolean GianPhoi (true = vươn ra ngoài, false = thu vào nhà)
+                // Cập nhật cả GianPhoi và gianphoi (chữ thường) để khớp 100% với code vi xử lý
                 updates['NhaThongMinhV1/DieuKhien/GianPhoi'] = isExtend;
+                updates['NhaThongMinhV1/DieuKhien/gianphoi'] = isExtend;
                 // Cập nhật góc số nguyên để MCU đọc trực tiếp servo.write(angle)
                 updates['NhaThongMinhV1/DieuKhien/GocGianPhoi'] = angle;
                 break;
