@@ -5,10 +5,10 @@
    ========================================================================== */
 
 :root {
-    /* 1. Ảnh nền ngôi nhà thông minh & Lớp phủ sáng trong suốt nhìn rõ hậu cảnh */
-    /* Kết hợp ảnh SVG vector biệt thự thông minh nội bộ (load tức thì 0ms, không phụ thuộc mạng) + ảnh Unsplash chất lượng cao */
-    --bg-house-image: url('../assets/bg-villa.svg'), url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=85');
-    --bg-page-overlay: linear-gradient(135deg, rgba(240, 244, 248, 0.20) 0%, rgba(248, 250, 252, 0.28) 100%);
+    /* 1. Ảnh nền ngôi nhà thông minh thực tế cao cấp & Lớp phủ sáng mờ trong suốt */
+    /* Ảnh biệt thự thực tế chất lượng cao lưu cục bộ tại assets/smart-home-bg.jpg (tải tức thì, siêu nét) */
+    --bg-house-image: url('../assets/smart-home-bg.jpg');
+    --bg-page-overlay: linear-gradient(135deg, rgba(240, 244, 248, 0.18) 0%, rgba(248, 250, 252, 0.26) 100%);
     
     /* 2. Bảng màu thẻ Glassmorphism - Tách bạch rõ ràng, sắc nét, nhìn rõ ngôi nhà phía sau */
     --card-surface: rgba(255, 255, 255, 0.88);
@@ -1257,10 +1257,21 @@ input:checked + .cyber-slider:before {
 /* ==========================================================================
    THEME SWITCHER STYLES (ĐỔI GIAO DIỆN TÙY CHỌN 1-CLICK)
    ========================================================================== */
-/* Giao diện 1: Biệt thự thông minh (Mặc định - Sáng sang trọng, thấy rõ nhà) */
+/* Giao diện 1: Biệt thự hoàng hôn hiện đại (Mặc định - Smart Villa & Pool cực đẹp) */
 body.theme-villa {
-    background-color: #f1f5f9;
-    background-image: var(--bg-page-overlay), var(--bg-house-image);
+    background-color: #0f172a;
+    background-image: var(--bg-page-overlay), url('../assets/smart-home-bg.jpg');
+    background-size: cover;
+    background-position: center center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    color: var(--text-primary);
+}
+
+/* Giao diện 2: Dinh thự kính hiện đại (Modern Glass Mansion sang trọng) */
+body.theme-mansion {
+    background-color: #0f172a;
+    background-image: var(--bg-page-overlay), url('../assets/smart-villa-mansion.jpg');
     background-size: cover;
     background-position: center center;
     background-attachment: fixed;

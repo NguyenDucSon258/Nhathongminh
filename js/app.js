@@ -1154,23 +1154,25 @@ const AppCore = {
     },
 
     applyTheme: function(theme, notify = true) {
-        document.body.classList.remove('theme-villa', 'theme-dark', 'theme-light');
+        document.body.classList.remove('theme-villa', 'theme-mansion', 'theme-dark', 'theme-light');
         document.body.classList.add('theme-' + theme);
         localStorage.setItem('smarthome_theme', theme);
 
         const themeBtn = document.getElementById('themeSwitchBtn');
         if (themeBtn) {
             const labels = {
-                'villa': '🏡 Nền Biệt Thự',
-                'dark': '🌌 Nền Dark Cyber',
-                'light': '☁️ Nền Sáng Tinh Tế'
+                'villa': '🏡 Biệt Thự Hoàng Hôn',
+                'mansion': '🏰 Dinh Thự Kính',
+                'dark': '🌌 Dark Cyber',
+                'light': '☁️ Sáng Tinh Tế'
             };
             themeBtn.innerHTML = labels[theme] || '🎨 Đổi Giao Diện';
         }
 
         if (notify) {
             const names = {
-                'villa': 'Biệt Thự Kính Thông Minh (Nhìn rõ nhà)',
+                'villa': 'Biệt Thự Hoàng Hôn & Hồ Bơi (Siêu Đẹp)',
+                'mansion': 'Dinh Thự Kính Hiện Đại (Sang Trọng)',
                 'dark': 'Dark Mode Cyber (Theo ảnh mẫu)',
                 'light': 'Sáng Tinh Tế (Soft Glass)'
             };
@@ -1181,7 +1183,8 @@ const AppCore = {
     toggleTheme: function() {
         const current = localStorage.getItem('smarthome_theme') || 'villa';
         let next = 'villa';
-        if (current === 'villa') next = 'dark';
+        if (current === 'villa') next = 'mansion';
+        else if (current === 'mansion') next = 'dark';
         else if (current === 'dark') next = 'light';
         else if (current === 'light') next = 'villa';
         this.applyTheme(next, true);
