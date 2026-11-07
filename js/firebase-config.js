@@ -177,6 +177,14 @@ const SmartHomeFirebase = {
             window.AppCore.updateLastOperatorUI(data.nguoi_dieu_khien);
         }
 
+        // 10. Dữ liệu các Node / Phòng bổ sung tạo động từ phần cứng hoặc giao diện
+        if (data.nodes && typeof data.nodes === 'object') {
+            normalized.nodes = data.nodes;
+        }
+        if (data.rooms_config) {
+            normalized.roomsConfig = data.rooms_config;
+        }
+
         callback(normalized);
     },
 
@@ -287,6 +295,57 @@ const SmartHomeFirebase = {
         } catch (err) {
             console.error("❌ [Firebase] Ghi lệnh lên Firebase thất bại:", err);
             await this.logDeviceActionToFirestore(deviceId, action, extra);
+            return false;
+        }
+    },
+
+    /**
+     * Gửi lệnh điều khiển thiết bị thuộc một Node / Phòng mở rộng
+     * Đường dẫn Realtime Database: /nodes/<nodeId>/<deviceKey>
+     */
+    sendNodeCommand: async function(nodeId, deviceKey, value) {
+        if (!this.db) return false;
+        try {
+            const updates = {};
+            updates[`nodes/${nodeId}/${deviceKey}`] = value;
+
+            const currentUser = (window.AppCore && window.AppCore.state && window.AppCore.state.currentUser) 
+                ? window.AppCore.state.currentUser 
+                : { name: "Chủ hộ", role: "admin" };
+            const timeFormatted = new Date().toLocaleTimeString('vi-VN') + ' - ' + new Date().toLocaleDateString('vi-VN');
+
+            updates['nguoi_dieu_khien'] = {
+                ten: currentUser.name || "Chủ hộ",
+                vai_tro: currentUser.role || "user",
+                thiet_bi: `Node ${nodeId} (${deviceKey})`,
+                thao_tac: value ? "BẬT" : "TẮT",
+                thoi_gian: timeFormatted,
+                timestamp: Date.now()
+            };
+
+            await this.db.ref().update(updates);
+            console.log(`🔥 [Realtime Node] Đã gửi lệnh Node [${nodeId}/${deviceKey}]: ${value}`);
+
+            if (window.AppCore && typeof window.AppCore.updateLastOperatorUI === 'function') {
+                window.AppCore.updateLastOperatorUI(updates['nguoi_dieu_khien']);
+            }
+            return true;
+        } catch (err) {
+            console.error("❌ [Firebase] Lỗi gửi lệnh Node:", err);
+            return false;
+        }
+    },
+
+    /**
+     * Lưu cấu hình danh sách phòng động lên Firebase Realtime Database
+     */
+    saveRoomsConfig: async function(roomsConfig) {
+        if (!this.db) return false;
+        try {
+            await this.db.ref('rooms_config').set(roomsConfig);
+            return true;
+        } catch (err) {
+            console.warn("⚠️ [Firebase] Lỗi lưu rooms_config:", err);
             return false;
         }
     },

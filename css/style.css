@@ -1255,6 +1255,79 @@ input:checked + .cyber-slider:before {
 }
 
 /* ==========================================================================
+   DYNAMIC ROOMS & NODES STYLES (TẠO PHÒNG MỚI KHÔNG SỬA CODE)
+   ========================================================================== */
+.icon-radio-label {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.icon-radio-label input {
+    display: none;
+}
+
+.icon-radio-label span {
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-pill);
+    background: var(--card-inner);
+    border: 1px solid var(--card-border);
+    transition: var(--transition);
+}
+
+.icon-radio-label input:checked + span {
+    background: var(--accent-primary);
+    color: #ffffff;
+    border-color: var(--accent-primary);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.feature-checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: var(--card-inner);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-md);
+    padding: 0.65rem 0.8rem;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 0.8rem;
+}
+
+.feature-checkbox-label:hover {
+    border-color: var(--accent-primary);
+    background: var(--card-inner-hover);
+}
+
+.feature-checkbox-label input[type="checkbox"] {
+    margin-top: 3px;
+    accent-color: var(--accent-primary);
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+/* Thẻ phòng trống gợi ý tạo phòng */
+.empty-room-card {
+    grid-column: 1 / -1;
+    background: rgba(255, 255, 255, 0.75);
+    border: 2px dashed #cbd5e1;
+    border-radius: var(--radius-xl);
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    backdrop-filter: blur(12px);
+    transition: var(--transition);
+}
+
+.empty-room-card:hover {
+    border-color: var(--accent-primary);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+/* ==========================================================================
    THEME SWITCHER STYLES (ĐỔI GIAO DIỆN TÙY CHỌN 1-CLICK)
    ========================================================================== */
 /* Giao diện 1: Biệt thự hoàng hôn hiện đại (Mặc định - Smart Villa & Pool cực đẹp) */
